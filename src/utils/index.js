@@ -315,25 +315,3 @@ export function removeClass(ele, cls) {
     ele.className = ele.className.replace(reg, ' ')
   }
 }
-
-
-export  function isRepeatKey(arr, key) {
-
-  
-  // var obj = {};
-  var a = []
-  for (var i = 0; i < arr.length; i++) {
-    if (a.includes(arr[i][key])) {
-      
-      return false;
-    } else {
-      
-      a.push(arr[i][key]) ;
-      console.log(a);
-      
-      
-    }
-  }
-  return a;
-  
-}

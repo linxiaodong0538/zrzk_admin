@@ -2,33 +2,35 @@
   <div class="xny-region">
     <div class="region">
       <div class="box-header">
-        <div class="tabBackground" :class="{tabBackgrounddefault:fla==0}" @click="region">区域</div>
-        <div class="tabBackground2" :class="{tabBackgrounddefault:fla==1}" @click="coverGroup">分组</div>
+        <div class="tabBackground"
+          :class="{tabBackgrounddefault:fla==0}"
+          @click="region">区域</div>
+        <div class="tabBackground2"
+          :class="{tabBackgrounddefault:fla==1}"
+          @click="coverGroup">分组</div>
       </div>
-      <div v-show="fla == 0" class="regionList">
+      <div v-show="fla == 0"
+        class="regionList">
         <div class="head-container">
-          <el-tree
-            :data="deptOptions"
+          <el-tree :data="deptOptions"
             :props="defaultProps"
             :expand-on-click-node="false"
             :filter-node-method="filterNode"
             ref="tree"
             default-expand-all
-            @node-click="handleNodeClick"
-          />
+            @node-click="handleNodeClick" />
         </div>
       </div>
-      <div v-show="fla == 1" class="regionList">
+      <div v-show="fla == 1"
+        class="regionList">
         <div class="head-container">
-          <el-tree
-            :data="deptOptions"
+          <el-tree :data="deptOptions"
             :props="defaultProps"
             :expand-on-click-node="false"
             :filter-node-method="filterNode"
             ref="tree"
             default-expand-all
-            @node-click="handleNodeClick1"
-          />
+            @node-click="handleNodeClick1" />
         </div>
       </div>
     </div>
@@ -37,120 +39,160 @@
         <el-row class="xny-Manhole">
           <el-col :span="5">
             <span class="coverList">所属项目:</span>
-            <el-select v-model="value" placeholder>
-              <el-option
-                v-for="item in project"
+            <el-select v-model="value"
+              placeholder>
+              <el-option v-for="item in project"
                 :key="item.projectId"
                 :label="item.projectName"
                 :value="item.projectId"
                 size="small"
-                class="Manhole"
-              ></el-option>
+                class="Manhole"></el-option>
             </el-select>
           </el-col>
           <el-col :span="5">
             <span class="coverList">产品类型:</span>
-            <el-select v-model="value1" placeholder>
-              <el-option
-                v-for="item in options"
+            <el-select v-model="value1"
+              placeholder>
+              <el-option v-for="item in options"
                 :key="item.value"
                 :label="item.label"
                 :value1="item.value"
                 size="small"
-                class="Manhole"
-              ></el-option>
+                class="Manhole"></el-option>
             </el-select>
           </el-col>
           <el-col :span="5">
             <span class="coverList">产品名称:</span>
-            <el-select v-model="value1" placeholder>
-              <el-option
-                v-for="item in options"
+            <el-select v-model="value1"
+              placeholder>
+              <el-option v-for="item in options"
                 :key="item.value"
                 :label="item.label"
                 :value1="item.value"
                 size="small"
-                class="Manhole"
-              ></el-option>
+                class="Manhole"></el-option>
             </el-select>
           </el-col>
           <el-col :span="5">
             <span class="coverList">设备编号:</span>
             <!-- v-model="gatewayName"  -->
-            <el-input placeholder size="small" class="Manhole" />
+            <el-input placeholder
+              size="small"
+              class="Manhole" />
           </el-col>
 
           <el-col :span="4">
             <!-- @click="handleQuery" -->
             <!-- -->
-            <el-button type="primary" icon="el-icon-search" size="mini" class="coverSearch">查询</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+            <el-button type="primary"
+              icon="el-icon-search"
+              size="mini"
+              class="coverSearch">查询</el-button>
+            <el-button icon="el-icon-refresh"
+              size="mini"
+              @click="resetQuery">重置</el-button>
           </el-col>
         </el-row>
       </div>
       <div class="coverForm">
-        <el-row :gutter="10" class="mb8">
+        <el-row :gutter="10"
+          class="mb8">
           <el-col :span="4">
-            <el-button type="primary" size="mini" @click="handleIssuedControl">下发控制</el-button>
-            <el-button type="primary" size="mini" @click="handleSelectAll">全选</el-button>
+            <el-button type="primary"
+              size="mini"
+              @click="handleIssuedControl">下发控制</el-button>
+            <el-button type="primary"
+              size="mini"
+              @click="handleSelectAll">全选</el-button>
           </el-col>
           <span>已选择{{ids.length}}台设备</span>
         </el-row>
         <!-- v-loading="loading" -->
-        <el-table :data="tableData" @selection-change="handleSelectionChange" ref="multipleTable">
-          <el-table-column type="selection" width="55" align="center" />
+        <el-table :data="tableData"
+          @selection-change="handleSelectionChange"
+          ref="multipleTable">
+          <el-table-column type="selection"
+            width="55"
+            align="center" />
 
-          <el-table-column label="设备编号" min-width="100" prop="deviceId"></el-table-column>
-          <el-table-column label="产品名称" align="center" prop="productName" />
-          <el-table-column label="产品类型" align="center" prop="productType" />
-          <el-table-column label="部件编号" align="center" prop="partsId" />
-          <el-table-column label="名称" align="center" prop="deviceName" />
-          <el-table-column label="在线状态" align="center" prop="onlineStatus" />
-          <el-table-column label="操作" min-width="100">
+          <el-table-column label="设备编号"
+            min-width="100"
+            prop="deviceId"></el-table-column>
+          <el-table-column label="产品名称"
+            align="center"
+            prop="productName" />
+          <el-table-column label="产品类型"
+            align="center"
+            prop="productType" />
+          <el-table-column label="部件编号"
+            align="center"
+            prop="partsId" />
+          <el-table-column label="名称"
+            align="center"
+            prop="deviceName" />
+          <el-table-column label="在线状态"
+            align="center"
+            prop="onlineStatus" />
+          <el-table-column label="操作"
+            min-width="100">
             <template slot-scope="scope">
               <!-- -->
-              <span class="viewData" @click="dialogTableVisible = true">下发控制</span>
+              <span class="viewData"
+                @click="dialogTableVisible = true">下发控制</span>
             </template>
           </el-table-column>
         </el-table>
         <!-- @pagination="getList" -->
-        <pagination
-          v-show="total>0"
+        <pagination v-show="total>0"
           :total="total"
           :page.sync="queryParams.pageNum"
           :limit.sync="queryParams.pageSize"
-          @pagination="2"
-        />
-        <el-dialog title="下发控制" :visible.sync="dialogTableVisible" top="32vh">
+          @pagination="2" />
+        <el-dialog title="下发控制"
+          :visible.sync="dialogTableVisible"
+          top="32vh">
           <el-row>
             <span>产品名称:</span>
-            <el-select v-model="value2" placeholder disabled>
-              <el-option value="a" size="small" class="Manhole"></el-option>
+            <el-select v-model="value2"
+              placeholder
+              disabled>
+              <el-option value="a"
+                size="small"
+                class="Manhole"></el-option>
             </el-select>
             <span class="offset">已选择{{ids.length}}台设备</span>
           </el-row>
           <el-row class="table-wrap">
             <span class="title">下发参数</span>
 
-            <el-table
-              :data="issuedData"
+            <el-table :data="issuedData"
               border
               class="teble"
-              @selection-change="handleIssuedSelect"
-            >
-              <el-table-column type="selection" width="55" align="center" />
-              <el-table-column prop="deviceFieldNameCn" label="数据名称" span="12"></el-table-column>
-              <el-table-column prop="dataValue" label="数据值" span="12">
+              @selection-change="handleIssuedSelect">
+              <el-table-column type="selection"
+                width="55"
+                align="center" />
+              <el-table-column prop="deviceFieldNameCn"
+                label="数据名称"
+                span="12"></el-table-column>
+              <el-table-column prop="dataValue"
+                label="数据值"
+                span="12">
                 <template slot-scope="scope">
-                  <input type="text" class="input" v-model="scope.row.deviceFieldValue" />
-                  <el-button size="mini" @click="handleDefaultValue(scope)">填入默认值</el-button>
+                  <input type="text"
+                    class="input"
+                    v-model="scope.row.deviceFieldValue" />
+                  <el-button size="mini"
+                    @click="handleDefaultValue(scope)">填入默认值</el-button>
                 </template>
               </el-table-column>
             </el-table>
           </el-row>
-          <div slot="footer" class="dialog-footer">
+          <div slot="footer"
+            class="dialog-footer">
             <el-button @click="dialogTableVisible = false">取 消</el-button>
-            <el-button type="primary" @click="handleSubmit">确 定</el-button>
+            <el-button type="primary"
+              @click="handleSubmit">确 定</el-button>
           </div>
         </el-dialog>
       </div>
@@ -290,21 +332,23 @@ export default {
       if (!this.arrSelection.length) {
         return this.$message("请选择");
       }
+      console.log(this.arrSelection);
 
-      if (
-        this.arrSelection.length > 1 &&
-        isRepeatKey(this.arrSelection, "productName")
-      ) {
-        return this.$message("请选择相同的产品");
+      const arr = this.arrSelection.map(item => {
+        return item.productName
+      })
+      for (let item of arr) {
+        if (arr[0] !== item) return this.$message("请选择相同的产品");
       }
+
       this.dialogTableVisible = true;
       this.value2 = this.arrSelection[0].productName;
 
       let res = await issuedData(this.arrSelection[0].productId);
       this.issuedData = res.data;
-      //深拷贝默认值
       this.issuedData2 = JSON.parse(JSON.stringify(res.data));
     },
+
     //全选
     handleSelectAll() {
       this.$refs.multipleTable.toggleAllSelection();
@@ -431,14 +475,14 @@ export default {
         return this.$message("请选择");
       }
 
-        const deviceIds = this.arrIssuedSelect.map(item=>{
-          return item.deviceId
-        })
+      const deviceIds = this.arrIssuedSelect.map(item => {
+        return item.deviceId
+      })
 
-        console.log( deviceIds);
-        
+      console.log(deviceIds);
+
       const data = {
-        deviceFieldIssueds:this.arrIssuedSelect,
+        deviceFieldIssueds: this.arrIssuedSelect,
         deviceIds
       };
       let res = await submitControl(data);
