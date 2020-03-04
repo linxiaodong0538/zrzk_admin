@@ -125,23 +125,24 @@
           <el-row>
             <span>产品名称:</span>
             <el-select v-model="value2" placeholder disabled>
-              <el-option
-              value="a"
-                size="small"
-                class="Manhole"
-              ></el-option>
+              <el-option value="a" size="small" class="Manhole"></el-option>
             </el-select>
             <span class="offset">已选择{{ids.length}}台设备</span>
           </el-row>
           <el-row class="table-wrap">
             <span class="title">下发参数</span>
 
-            <el-table :data="issuedData" border class="teble">
+            <el-table
+              :data="issuedData"
+              border
+              class="teble"
+              @selection-change="handleIssuedSelect"
+            >
               <el-table-column type="selection" width="55" align="center" />
               <el-table-column prop="deviceFieldNameCn" label="数据名称" span="12"></el-table-column>
               <el-table-column prop="dataValue" label="数据值" span="12">
                 <template slot-scope="scope">
-                  <input type="text" class="input"  v-model="scope.row.deviceFieldValue"/>
+                  <input type="text" class="input" v-model="scope.row.deviceFieldValue" />
                   <el-button size="mini" @click="handleDefaultValue(scope)">填入默认值</el-button>
                 </template>
               </el-table-column>
@@ -149,7 +150,7 @@
           </el-row>
           <div slot="footer" class="dialog-footer">
             <el-button @click="dialogTableVisible = false">取 消</el-button>
-            <el-button type="primary" @click="dialogTableVisible = false">确 定</el-button>
+            <el-button type="primary" @click="handleSubmit">确 定</el-button>
           </div>
         </el-dialog>
       </div>
@@ -164,7 +165,7 @@ import {
   wellGroup,
   items
 } from "@/api/system/cover/coverManagement";
-import { list,issuedData} from "@/api/basic_data/strategy";
+import { list, issuedData, submitControl } from "@/api/basic_data/strategy";
 import { treeselect } from "@/api/system/dept";
 import { isRepeatKey } from "@/utils";
 
@@ -172,12 +173,14 @@ export default {
   components: {},
   data() {
     return {
-      a:'',
+      a: "",
       //下发参数
-      issuedData:[],
-      //选中的多选框
+      issuedData: [],
+      //下发控制选中
+      arrIssuedSelect: [],
+      //表格选中的多选框
       arrSelection: [],
-      value2:'',
+      value2: "",
       tableData: [],
       //显示下发控制框
       dialogTableVisible: false,
@@ -281,25 +284,26 @@ export default {
       });
       this.tableData = res.rows;
     },
+
     //下发控制
     async handleIssuedControl() {
-
       if (!this.arrSelection.length) {
         return this.$message("请选择");
       }
-      
-      if(this.arrSelection.length > 1 &&  isRepeatKey(this.arrSelection,"productName")){
-         return this.$message("请选择相同的产品");
-      }
-      this.dialogTableVisible = true
-      this.value2 = this.arrSelection[0].productName
 
-      let res = await issuedData(this.arrSelection[0].productId)
-      this.issuedData = res.data
+      if (
+        this.arrSelection.length > 1 &&
+        isRepeatKey(this.arrSelection, "productName")
+      ) {
+        return this.$message("请选择相同的产品");
+      }
+      this.dialogTableVisible = true;
+      this.value2 = this.arrSelection[0].productName;
+
+      let res = await issuedData(this.arrSelection[0].productId);
+      this.issuedData = res.data;
       //深拷贝默认值
-      this.issuedData2 = JSON.parse(JSON.stringify(res.data)) 
-      
-        
+      this.issuedData2 = JSON.parse(JSON.stringify(res.data));
     },
     //全选
     handleSelectAll() {
@@ -409,8 +413,35 @@ export default {
       });
     },
 
-    handleDefaultValue(e){
-      this.issuedData[e.$index].deviceFieldValue = this.issuedData2[e.$index].deviceFieldValue
+    //下发控制多选框变化
+    handleIssuedSelect(selection) {
+      this.arrIssuedSelect = selection;
+    },
+    //重置默认值
+    handleDefaultValue(e) {
+      this.issuedData[e.$index].deviceFieldValue = this.issuedData2[
+        e.$index
+      ].deviceFieldValue;
+    },
+
+    //提交
+    async handleSubmit() {
+      console.log(this.arrIssuedSelect);
+      if (!this.arrIssuedSelect.length) {
+        return this.$message("请选择");
+      }
+
+        const deviceIds = this.arrIssuedSelect.map(item=>{
+          return item.deviceId
+        })
+
+        console.log( deviceIds);
+        
+      const data = {
+        deviceFieldIssueds:this.arrIssuedSelect,
+        deviceIds
+      };
+      let res = await submitControl(data);
     }
   }
 };
