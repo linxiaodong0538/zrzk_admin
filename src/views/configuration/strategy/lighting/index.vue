@@ -270,7 +270,7 @@ export default {
       label: x.projectName,
       value: x.projectId
     }));
-    console.log(this.projects);
+
     
     this.getDicts("sys_normal_disable").then(({ data }) => {
       this.statusOptions.push(
