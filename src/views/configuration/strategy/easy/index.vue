@@ -158,7 +158,7 @@ import {
   items
 } from "@/api/system/cover/coverManagement";
 import { list, issuedData, submitControl } from "@/api/basic_data/strategy";
-import { XTable ,XForm } from "@/components";
+import { XTable, XForm } from "@/components";
 import { treeselect } from "@/api/system/dept";
 import { isRepeatKey } from "@/utils";
 import { Paginator } from "@/dtos/paginator";
