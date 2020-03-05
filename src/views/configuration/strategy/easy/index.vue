@@ -2,197 +2,147 @@
   <div class="xny-region">
     <div class="region">
       <div class="box-header">
-        <div class="tabBackground"
-          :class="{tabBackgrounddefault:fla==0}"
-          @click="region">区域</div>
-        <div class="tabBackground2"
-          :class="{tabBackgrounddefault:fla==1}"
-          @click="coverGroup">分组</div>
+        <div class="tabBackground" :class="{tabBackgrounddefault:fla==0}" @click="region">区域</div>
+        <div class="tabBackground2" :class="{tabBackgrounddefault:fla==1}" @click="coverGroup">分组</div>
       </div>
-      <div v-show="fla == 0"
-        class="regionList">
+      <div v-show="fla == 0" class="regionList">
         <div class="head-container">
-          <el-tree :data="deptOptions"
+          <el-tree
+            :data="deptOptions"
             :props="defaultProps"
             :expand-on-click-node="false"
             :filter-node-method="filterNode"
             ref="tree"
             default-expand-all
-            @node-click="handleNodeClick" />
+            @node-click="handleNodeClick"
+          />
         </div>
       </div>
-      <div v-show="fla == 1"
-        class="regionList">
+      <div v-show="fla == 1" class="regionList">
         <div class="head-container">
-          <el-tree :data="deptOptions"
+          <el-tree
+            :data="deptOptions"
             :props="defaultProps"
             :expand-on-click-node="false"
             :filter-node-method="filterNode"
             ref="tree"
             default-expand-all
-            @node-click="handleNodeClick1" />
+            @node-click="handleNodeClick1"
+          />
         </div>
       </div>
     </div>
-    <div class="xny-search">
-      <div class="xny-cover">
-        <el-row class="xny-Manhole">
-          <el-col :span="5">
-            <span class="coverList">所属项目:</span>
-            <el-select v-model="value"
-              placeholder>
-              <el-option v-for="item in project"
-                :key="item.projectId"
-                :label="item.projectName"
-                :value="item.projectId"
-                size="small"
-                class="Manhole"></el-option>
-            </el-select>
-          </el-col>
-          <el-col :span="5">
-            <span class="coverList">产品类型:</span>
-            <el-select v-model="value1"
-              placeholder>
-              <el-option v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value1="item.value"
-                size="small"
-                class="Manhole"></el-option>
-            </el-select>
-          </el-col>
-          <el-col :span="5">
-            <span class="coverList">产品名称:</span>
-            <el-select v-model="value1"
-              placeholder>
-              <el-option v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value1="item.value"
-                size="small"
-                class="Manhole"></el-option>
-            </el-select>
-          </el-col>
-          <el-col :span="5">
-            <span class="coverList">设备编号:</span>
-            <!-- v-model="gatewayName"  -->
-            <el-input placeholder
-              size="small"
-              class="Manhole" />
-          </el-col>
 
-          <el-col :span="4">
-            <!-- @click="handleQuery" -->
-            <!-- -->
-            <el-button type="primary"
-              icon="el-icon-search"
-              size="mini"
-              class="coverSearch">查询</el-button>
-            <el-button icon="el-icon-refresh"
-              size="mini"
-              @click="resetQuery">重置</el-button>
-          </el-col>
-        </el-row>
-      </div>
+    <div class="xny-search">
+      <x-form
+        :options="formOptions"
+        :form="formData"
+        labelWidth="100px"
+        @callback="search"
+      ></x-form>
+      <!-- <div class="xny-cover">
+        <span class="coverList">所属项目:</span>
+        <el-select v-model="value" placeholder>
+          <el-option
+            v-for="item in project"
+            :key="item.projectId"
+            :label="item.projectName"
+            :value="item.projectId"
+            size="small"
+            class="Manhole"
+          ></el-option>
+        </el-select>
+
+        <span class="coverList">产品类型:</span>
+        <el-select v-model="value1" placeholder>
+          <el-option
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value1="item.value"
+            size="small"
+            class="Manhole"
+          ></el-option>
+        </el-select>
+
+        <span class="coverList">产品名称:</span>
+        <el-select v-model="value1" placeholder>
+          <el-option
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value1="item.value"
+            size="small"
+            class="Manhole"
+          ></el-option>
+        </el-select>
+        <span class="coverList">设备编号:</span>
+        <el-input placeholder size="small" class="Manhole"  v-model="equipmentNum"/>
+
+        <el-button type="primary" icon="el-icon-search" size="mini" class="coverSearch">查询</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+      </div>-->
       <div class="coverForm">
-        <el-row :gutter="10"
-          class="mb8">
+        <el-row :gutter="10" class="mb8">
           <el-col :span="4">
-            <el-button type="primary"
-              size="mini"
-              @click="handleIssuedControl">下发控制</el-button>
-            <el-button type="primary"
-              size="mini"
-              @click="handleSelectAll">全选</el-button>
+            <el-button type="primary" size="mini" @click="handleIssuedControl">下发控制</el-button>
+            <el-button type="primary" size="mini" @click="handleSelectAll">全选</el-button>
           </el-col>
           <span>已选择{{ids.length}}台设备</span>
         </el-row>
-        <!-- v-loading="loading" -->
-        <el-table :data="tableData"
-          @selection-change="handleSelectionChange"
-          ref="multipleTable">
-          <el-table-column type="selection"
-            width="55"
-            align="center" />
 
-          <el-table-column label="设备编号"
-            min-width="100"
-            prop="deviceId"></el-table-column>
-          <el-table-column label="产品名称"
-            align="center"
-            prop="productName" />
-          <el-table-column label="产品类型"
-            align="center"
-            prop="productType" />
-          <el-table-column label="部件编号"
-            align="center"
-            prop="partsId" />
-          <el-table-column label="名称"
-            align="center"
-            prop="deviceName" />
-          <el-table-column label="在线状态"
-            align="center"
-            prop="onlineStatus" />
-          <el-table-column label="操作"
-            min-width="100">
+        <x-table
+          ref="multipleTable"
+          :options="tableheader"
+          :data="models"
+          :pagination="pagination"
+          :isSelectable="true"
+          :isPaging="true"
+          @page-change="search"
+          @selection-change="handleSelectionChange"
+        >
+          <el-table-column label="操作" min-width="100">
             <template slot-scope="scope">
-              <!-- -->
-              <span class="viewData"
-                @click="dialogTableVisible = true">下发控制</span>
+              <span class="viewData" @click="handleCurRowControl(scope.row)">下发控制</span>
             </template>
           </el-table-column>
-        </el-table>
-        <!-- @pagination="getList" -->
-        <pagination v-show="total>0"
-          :total="total"
-          :page.sync="queryParams.pageNum"
-          :limit.sync="queryParams.pageSize"
-          @pagination="2" />
-        <el-dialog title="下发控制"
-          :visible.sync="dialogTableVisible"
-          top="32vh">
+        </x-table>
+
+        <el-dialog title="下发控制" :visible.sync="dialogTableVisible" top="10vh">
           <el-row>
             <span>产品名称:</span>
-            <el-select v-model="value2"
-              placeholder
-              disabled>
-              <el-option value="a"
-                size="small"
-                class="Manhole"></el-option>
+            <el-select v-model="value2" placeholder disabled style="width:20vh">
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              ></el-option>
             </el-select>
             <span class="offset">已选择{{ids.length}}台设备</span>
           </el-row>
           <el-row class="table-wrap">
             <span class="title">下发参数</span>
 
-            <el-table :data="issuedData"
+            <el-table
+              :data="issuedData"
               border
               class="teble"
-              @selection-change="handleIssuedSelect">
-              <el-table-column type="selection"
-                width="55"
-                align="center" />
-              <el-table-column prop="deviceFieldNameCn"
-                label="数据名称"
-                span="12"></el-table-column>
-              <el-table-column prop="dataValue"
-                label="数据值"
-                span="12">
+              @selection-change="handleIssuedSelect"
+            >
+              <el-table-column type="selection" width="55" align="center" />
+              <el-table-column prop="deviceFieldNameCn" label="数据名称" span="12"></el-table-column>
+              <el-table-column prop="dataValue" label="数据值" span="12">
                 <template slot-scope="scope">
-                  <input type="text"
-                    class="input"
-                    v-model="scope.row.deviceFieldValue" />
-                  <el-button size="mini"
-                    @click="handleDefaultValue(scope)">填入默认值</el-button>
+                  <input type="text" class="input" v-model="scope.row.deviceFieldValue" />
+                  <el-button size="mini" @click="handleDefaultValue(scope)">填入默认值</el-button>
                 </template>
               </el-table-column>
             </el-table>
           </el-row>
-          <div slot="footer"
-            class="dialog-footer">
+          <div slot="footer" class="dialog-footer">
             <el-button @click="dialogTableVisible = false">取 消</el-button>
-            <el-button type="primary"
-              @click="handleSubmit">确 定</el-button>
+            <el-button type="primary" @click="handleSubmit">确 定</el-button>
           </div>
         </el-dialog>
       </div>
@@ -208,14 +158,59 @@ import {
   items
 } from "@/api/system/cover/coverManagement";
 import { list, issuedData, submitControl } from "@/api/basic_data/strategy";
+import { XTable ,XForm } from "@/components";
 import { treeselect } from "@/api/system/dept";
 import { isRepeatKey } from "@/utils";
+import { Paginator } from "@/dtos/paginator";
 
 export default {
-  components: {},
+  components: { XTable,XForm },
   data() {
     return {
-      a: "",
+      equipmentNum: "",
+      options: [],
+      formOptions: [
+        {
+          prop: "projectId",
+          label: "项目",
+          type: "select",
+          clearable: true,
+          options: []
+        },
+        {
+          prop: "productTypeId",
+          label: "产品类型",
+          type: "select",
+          clearable: true,
+          options: []
+        },
+        {
+          prop: "projectId",
+          label: "项目",
+          type: "select",
+          clearable: true,
+          options: []
+        },
+        {
+          prop: "productTypeId",
+          label: "产品类型",
+          type: "select",
+          clearable: true,
+          options: []
+        }
+      ],
+
+      tableheader: [
+        { prop: "deviceId", label: "设备编码" },
+        { prop: "productName", label: "产品名称" },
+        { prop: "productType", label: "产品类型" },
+        { prop: "partsId", label: "部件编号" },
+        { prop: "deviceName", label: "名称" },
+        { prop: "onlineStatus", label: "在线状态" }
+      ],
+      formData:{},
+      models: [],
+      pagination: new Paginator(),
       //下发参数
       issuedData: [],
       //下发控制选中
@@ -234,8 +229,7 @@ export default {
       //所属项目
       project: [],
       value: "所有",
-      //产品名称
-      options: [],
+
       value1: "所有",
       defaultProps: {
         children: "children",
@@ -252,31 +246,7 @@ export default {
       single: true,
       // 非多个禁用
       multiple: true,
-      // 总条数
-      //   total: 0,
-      total: 10,
-      // 井盖管理数据
-      typeList: [
-        {
-          lanternsName: "灯具", //灯具名称
-          equipmentNumber: "1", //灯控制器地址
-          onlineState: "离线", //在线状态
-          deviceState: "关", //设备状态
-          alarmView: "-", //报警查看
-          processing: "-", //一键处理
-          voltage: "-", //电压
-          current: "-", //电流
-          activePower: "-", //有功功率
-          reactivePower: "-", //有功功率
-          powerFactor: "-", //功率因数
-          temperature: "-", //温度
-          signalIntensity: "-", //信号强度
-          NB_IMSI: "-", //NB_IMSI
-          apparentPower: "-", //视在电能
-          runningTime: "-", //运行时间
-          reportingTime: "-" //上报时间
-        }
-      ],
+
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -311,20 +281,26 @@ export default {
     this.getTreeselect();
     this.subordinate();
     //获取列表
-    this.getList();
+    this.search();
   },
 
   methods: {
-    //获取表格列表
-    async getList() {
-      const data = {
-        pageNum: this.queryParams.pageNum,
-        pageSize: this.queryParams.pageSize
-      };
-      let res = await list({
-        simpleControl: data
+    /** 查询列表 */
+    search() {
+      let params = Object.assign(
+        {},
+        {
+          pageNum: this.pagination.index,
+          pageSize: this.pagination.size,
+          page: this.pagination.index
+        }
+      );
+      this.loading = true;
+      list(params).then(({ rows, total }) => {
+        this.loading = false;
+        this.models = rows;
+        this.pagination.all = total;
       });
-      this.tableData = res.rows;
     },
 
     //下发控制
@@ -335,8 +311,8 @@ export default {
       console.log(this.arrSelection);
 
       const arr = this.arrSelection.map(item => {
-        return item.productName
-      })
+        return item.productName;
+      });
       for (let item of arr) {
         if (arr[0] !== item) return this.$message("请选择相同的产品");
       }
@@ -351,7 +327,7 @@ export default {
 
     //全选
     handleSelectAll() {
-      this.$refs.multipleTable.toggleAllSelection();
+      this.$refs.multipleTable.handleSelectAll();
     },
     /** 区域 */
     getTreeselect() {
@@ -359,7 +335,6 @@ export default {
         this.deptOptions = response.data;
         this.management.id = this.deptOptions[0].id;
         this.management.label = this.deptOptions[0].label;
-        // console.log(this.management.id);
       });
     },
     //区域
@@ -383,9 +358,7 @@ export default {
     /**项目 */
     subordinate() {
       items().then(res => {
-        // console.log(res);
         this.project = res.rows;
-        console.log(this.project);
       });
     },
     // 筛选节点
@@ -409,9 +382,9 @@ export default {
 
     /** 重置按钮操作 */
     resetQuery() {
-      //   this.dateRange = [];
-      //   this.resetForm("queryForm");
-      //   this.handleQuery();
+      this.dateRange = [];
+      this.resetForm("queryForm");
+      this.handleQuery();
     },
 
     // 字典状态字典翻译
@@ -468,6 +441,16 @@ export default {
       ].deviceFieldValue;
     },
 
+    //当前行下发控制
+    async handleCurRowControl(row) {
+      this.$refs.multipleTable.toggleRowSelection(row);
+      this.dialogTableVisible = true;
+      this.value2 = row.productName;
+      const res = await issuedData(row.productId);
+      this.issuedData = res.data;
+      this.issuedData2 = JSON.parse(JSON.stringify(res.data));
+    },
+
     //提交
     async handleSubmit() {
       console.log(this.arrIssuedSelect);
@@ -475,17 +458,23 @@ export default {
         return this.$message("请选择");
       }
 
-      const deviceIds = this.arrIssuedSelect.map(item => {
-        return item.deviceId
-      })
-
-      console.log(deviceIds);
+      const deviceIds = this.arrSelection.map(item => {
+        return item.deviceId;
+      });
 
       const data = {
         deviceFieldIssueds: this.arrIssuedSelect,
         deviceIds
       };
       let res = await submitControl(data);
+      if (res.code == 200) {
+        this.$message({
+          message: "下发成功",
+          type: "success"
+        });
+        this.$refs.multipleTable.clearSelection();
+        this.dialogTableVisible = false;
+      }
     }
   }
 };
@@ -542,11 +531,13 @@ export default {
   margin-left: 15px;
   margin-right: 20px;
   margin-top: 10px;
-  padding: 5px 15px 13px 15px;
+  // padding: 0px 15px 13px 0px;
   background-color: #fff;
   border-radius: 8px;
   font-size: 13px;
+  line-height: 70px;
   .mb8 {
+    padding-left: 10px;
     height: 60px;
     line-height: 60px;
   }
@@ -584,6 +575,11 @@ export default {
   height: 30px;
   line-height: 30px;
 }
+.el-input-number,
+.el-select,
+.el-cascader {
+  width: 200px;
+}
 .managementList.el-input--small .el-input__inner {
   border-right: 0;
   border-radius: 4px 0 0 4px;
@@ -600,7 +596,6 @@ export default {
   text-align: center;
 }
 .table-wrap {
-  margin-top: 40px;
   .teble {
     margin-top: 6px;
   }

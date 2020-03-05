@@ -6,7 +6,6 @@ import store from '@/store'
 
 export default {
   inserted(el, binding, vnode) {
-    console.log(binding)
     const { value } = binding
     const all_permission = "*:*:*";
     const permissions = store.getters && store.getters.permissions
