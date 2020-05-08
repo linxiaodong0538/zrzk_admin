@@ -19,7 +19,7 @@
                             icon="el-icon-plus"
                             size="mini"
                             @click="handleAdd"
-                            v-hasPermi="['system:user:add']"
+                            v-hasPermi="['configuration:product:parameter']"
                         >新增</el-button>
                     </el-col>
                 </el-row>
@@ -45,9 +45,16 @@
                             <el-button
                                 size="mini"
                                 type="text"
+                                icon="el-icon-edit"
+                                @click="handleUpdate(scope.row)"
+                                v-hasPermi="['configuration:product:parameter']"
+                            >修改</el-button>
+                            <el-button
+                                size="mini"
+                                type="text"
                                 icon="el-icon-delete"
                                 @click="handleDelete(scope.row)"
-                                v-hasPermi="['configuration:region:remove']"
+                                v-hasPermi="['configuration:product:parameter']"
                             >删除</el-button>
                         </template>
                     </el-table-column>
@@ -126,14 +133,10 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
             // 岗位选项
             postOptions: [],
             // 角色选项
@@ -160,10 +163,11 @@ export default {
             /** table ^ */
             pagination: new Paginator(),
             options: [
-                { prop: "productFieldName", label: "数据名称" },
+                { prop: "productFieldName", label: "数据标识" },
+                { prop: "productFieldNameCn", label: "数据名称" },
                 { prop: "productDataType", label: "数据类型" },
                 { prop: "remark", label: "描述" },
-                { prop: "isNullable", label: "是否为空" }
+                { prop: "isEmpty", label: "允许为空", formatter(row, column){ return row['isEmpty']?'否':'是' } }
             ],
             models: [],
             /** table $ */
@@ -181,7 +185,71 @@ export default {
                 remark: ""
             },
             dialogOptions: DialogOptions,
-            dialogRules: {},
+            dialogRules: {
+                productFieldName: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    },
+                    {
+                        type: "string",
+                        pattern: /^[a-zA-Z0-9_]+$/,
+                        message: "只支持英文字母,数字,下划线",
+                        trigger: "blur"
+                    },
+                    {
+                        validator: (rule, value, callback, source, options) => {
+                            const field = rule.field;
+                            if (!field) return callback();
+                            // console.log("validator", field, rule, value);
+                            // console.log(">>>", source, options, this.models);
+                            if (
+                                value == "" ||
+                                value == undefined ||
+                                value == null
+                            ) {
+                                callback();
+                            } else {
+                                const count = this.models.filter(
+                                    x =>
+                                        x[field] === value &&
+                                        (!this.dialogForm.productFieldId ||
+                                            this.dialogForm.productFieldId !=
+                                                x.productFieldId)
+                                ).length; 
+                                callback(
+                                    count
+                                        ? new Error("该数据标识已被使用")
+                                        : undefined
+                                );
+                            }
+                        },
+                        trigger: "blur"
+                    }
+                ],
+                productFieldNameCn: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    }
+                ],
+                productDataType: [
+                    {
+                        required: true,
+                        message: "必选",
+                        trigger: "blur"
+                    }
+                ],
+                isEmpty: [
+                    {
+                        required: true,
+                        message: "必选",
+                        trigger: "blur"
+                    }
+                ]
+            },
             dialogVisible: false,
             /** dialog $ */
             // 表单校验
@@ -240,6 +308,9 @@ export default {
         // 根据名称筛选部门树
         deptName(val) {
             this.$refs.tree.filter(val);
+        },
+        firmware(val) {
+            this.search();
         }
     },
     created() {
@@ -413,32 +484,16 @@ export default {
             }
         },
         /** 新增按钮操作 */
-        handleAdd(t) {
-            console.log(t);
-            this.reset();
-            this.getTreeData();
-            this.getPositions();
-            this.getRoles();
-            if (t == "open") this.open = true;
-            else this.dialogVisible = true;
+        handleAdd() {
+            this.dialogForm = {};
+            this.dialogVisible = true;
             this.title = "新增";
-            this.form.password = this.initPassword;
         },
         /** 修改按钮操作 */
         handleUpdate(row) {
-            this.reset();
-            this.getTreeData();
-            this.getPositions();
-            this.getRoles();
-            const userId = row.userId || this.ids;
-            getUser(userId).then(response => {
-                this.form = response.data;
-                this.form.postIds = response.postIds;
-                this.form.roleIds = response.roleIds;
-                this.dialogVisible = true;
-                this.title = "修改";
-                this.form.password = "";
-            });
+            this.dialogForm = Object.assign({}, row);
+            this.dialogVisible = true;
+            this.title = "修改";
         },
         /** 提交按钮 */
         submitForm: function() {
@@ -446,15 +501,27 @@ export default {
                 productId: this.firmware.productId,
                 type: 3
             });
-            this.$product.addBuiltin(params).then(response => {
-                if (response.code === 200) {
-                    this.msgSuccess("新增成功");
-                    this.dialogVisible = false;
-                    this.search();
-                } else {
-                    this.msgError(response.msg);
-                }
-            });
+            if (params.productFieldId == null) {
+                this.$product.addBuiltin(params).then(response => {
+                    if (response.code === 200) {
+                        this.msgSuccess("新增成功");
+                        this.dialogVisible = false;
+                        this.search();
+                    } else {
+                        this.msgError(response.msg);
+                    }
+                });
+            } else {
+                this.$product.updateBuiltin(params).then(response => {
+                    if (response.code === 200) {
+                        this.msgSuccess("修改成功");
+                        this.dialogVisible = false;
+                        this.search();
+                    } else {
+                        this.msgError(response.msg);
+                    }
+                });
+            }
         },
         /** 删除按钮操作 */
         handleDelete(row) {

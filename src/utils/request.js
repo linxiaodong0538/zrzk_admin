@@ -1,16 +1,15 @@
 import axios from 'axios'
-import { Notification, MessageBox } from 'element-ui'
+import { Notification, MessageBox, Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
-
 
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 // 创建axios实例
 const service = axios.create({
     // axios中请求配置有baseURL选项，表示请求URL公共部分
-    baseURL: process.env.VUE_APP_BASE_API,
+    baseURL: process.env.VUE_APP_BASE_API
     // 超时
-    timeout: 10000
+    // timeout: 10000
 })
 // request拦截器
 service.interceptors.request.use(
@@ -47,7 +46,7 @@ service.interceptors.response.use(res => {
         Notification.error({
             title: res.data.msg
         })
-        return Promise.reject('error')
+        return Promise.reject(res.data)
     } else {
         return res.data
     }

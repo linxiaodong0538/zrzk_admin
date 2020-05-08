@@ -11,7 +11,6 @@
                     :default-expand-all="true"
                     @node-click="handleNodeClick"
                 >
-                    <!-- @node-click="handleNodeClick" -->
                     <span class="custom-tree-node" slot-scope="{ node, data }">
                         <span>{{ node.label }}</span>
                         <span class="tree-tools">
@@ -56,57 +55,61 @@
                             type="primary"
                             icon="el-icon-connection"
                             size="mini"
+                            plain
                             @click="handleDistribute()"
                             :disabled="multiple"
-                            v-hasPermi="['system:user:add']"
+                            v-hasPermi="['configuration:deviceGroup:add']"
                         >批量分组</el-button>
                     </el-col>
                     <el-col v-else :span="1.5">
                         <el-button
-                            type="danger"
+                            type="primary"
                             icon="el-icon-delete"
                             size="mini"
+                            plain
                             @click="handleRemoveDistribute"
                             :disabled="multiple"
-                            v-hasPermi="['system:user:add']"
+                            v-hasPermi="['configuration:deviceGroup:add']"
                         >批量移出分组</el-button>
                     </el-col>
                     <!-- <el-col :span="1.5">
                         <el-button
-                            type="success"
+                            type="primary"
                             icon="el-icon-edit"
                             size="mini"
                             :disabled="single"
                             @click="handleDistribute"
-                            v-hasPermi="['system:user:edit']"
+                            v-hasPermi="['configuration:deviceGroup:edit']"
                         >修改</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="danger"
+                            type="primary"
                             icon="el-icon-delete"
                             size="mini"
                             :disabled="multiple"
                             @click="handleDelete"
-                            v-hasPermi="['system:user:remove']"
+                            v-hasPermi="['configuration:deviceGroup:remove']"
                         >删除</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="info"
+                            type="primary"
                             icon="el-icon-upload2"
                             size="mini"
-                            @click="handleImport"
-                            v-hasPermi="['system:user:import']"
+                            plain
+@click="handleImport"
+                            v-hasPermi="['configuration:deviceGroup:import']"
                         >导入</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="warning"
+                            type="primary"
                             icon="el-icon-download"
                             size="mini"
+                            plain
                             @click="handleExport"
-                            v-hasPermi="['system:user:export']"
+                            v-hasPermi="['configuration:deviceGroup:export']"
                         >导出</el-button>
                     </el-col>-->
                 </el-row>
@@ -134,7 +137,7 @@
                                 type="text"
                                 icon="el-icon-connection"
                                 @click="handleDistribute(scope.row)"
-                                v-hasPermi="['configuration:region:edit']"
+                                v-hasPermi="['configuration:deviceGroup:edit']"
                             >修改分组</el-button>
                             <el-button
                                 v-if="current.groupId"
@@ -142,7 +145,7 @@
                                 type="text"
                                 icon="el-icon-connection"
                                 @click="handleRemoveDistribute(scope.row)"
-                                v-hasPermi="['configuration:region:edit']"
+                                v-hasPermi="['configuration:deviceGroup:remove']"
                             >删除分组</el-button>
                         </template>
                     </el-table-column>
@@ -235,14 +238,11 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
+            productTypeOptions: [],
             // 岗位选项
             postOptions: [],
             // 角色选项
@@ -391,18 +391,14 @@ export default {
             // }));
             // this.$forceUpdate();
         });
-        this.getDicts("sys_user_sex").then(response => {
-            this.sexOptions = response.data;
-            let node = this.dialogOptions.find(x => x.prop === "sex");
-            if (node) {
-                node.options = this.sexOptions.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }));
-            }
-        });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
+
+        this.$producttype.get().then(({ rows }) => {
+            this.productTypeOptions = rows.map(x => ({
+                label: x.productTypeName,
+                value: x.productTypeId
+            }));
+            let node = this.formOptions.find(x => x.prop === "productTypeId");
+            if (node) node.options = this.productTypeOptions;
         });
         this.projects = (this.$store.state.app.projects || []).map(x => ({
             label: x.projectName,
@@ -431,20 +427,29 @@ export default {
             });
             delete params.dateRange;
             this.loading = true;
-            this.$organization.search(params).then(({ rows, total }) => {
-                this.loading = false;
-                this.models = rows;
-                this.pagination.all = total;
-            });
+            this.$organization.search(params).then(
+                ({ rows, total }) => {
+                    this.loading = false;
+                    this.models = rows;
+                    this.pagination.all = total;
+                },
+                err => {
+                    this.loading = false;
+                    this.models = [];
+                    this.pagination.all = 0;
+                }
+            );
         },
         /** 查询部门下拉树结构 */
         getTreeData() {
             this.$organization.treeselect().then(({ data }) => {
-                data.splice(0, 0, { id: 0, label: "全部" });
+                data.splice(0, 0, { id: "", label: "全部" });
                 data[0] && (data[0].isRoot = true);
                 this.cache.tree = this.calculate(data, {}); // data.reduce((p, c) => ((p[c.id] = c), p), {});
                 // console.log("tree", this.cache.tree);
                 this.deptOptions = data;
+                console.log(this.deptOptions);
+
                 let node = this.dialogOptions.find(x => x.prop === "groupId");
                 if (node) node.options = this.deptOptions;
                 // let node = this..find(x => x.prop === "groupId");
@@ -766,16 +771,16 @@ export default {
         },
         /**
          * 获取某节点的整条树id
-         * node 树节点  
-         * isNeedPrev 是否需要找根节点   
+         * node 树节点
+         * isNeedPrev 是否需要找根节点
          */
         treelink(node, isNeedPrev = true) {
             if (!node) return [];
-            let result = []; 
+            let result = [];
             if (isNeedPrev) {
                 while (node.parentId != "0") {
                     node = this.cache.tree[node.parentId];
-                } 
+                }
                 result = this.treelink(node, false);
             } else {
                 result = [node.id];

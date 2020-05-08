@@ -11,7 +11,10 @@ export const DialogOptions = [
         type: "cascader",
         clearable: true,
         span: 12,
-        options: []
+        options: [],
+        emitPath: false,
+        multiple: false,
+        checkStrictly: true
     },
     {
         prop: "areaName",
@@ -37,17 +40,17 @@ export const DialogOptions = [
 
 export const FormOptions = [
     {
+        prop: "areaCode",
+        label: "区域编码",
+        type: "text",
+        clearable: true
+    },
+    {
         prop: "areaName",
         label: "区域名称",
         type: "text",
         clearable: true,
         options: []
-    },
-    {
-        prop: "areaCode",
-        label: "区域编码",
-        type: "text",
-        clearable: true
     },
     {
         prop: "areaAddr",

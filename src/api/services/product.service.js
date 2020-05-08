@@ -22,9 +22,13 @@ export class ProductService extends SuperService {
         })
     }
 
-    getFields({ id }) {
+    /**
+     * 根据产品查询自定义字段
+     * @param {*} param0 
+     */
+    getFields({ productId }) {
         return this.invoke({
-            url: `/device/deviceRegister/${id}/fields`,
+            url: `/device/deviceRegister/${productId}/fields`,
             method: 'get'
         });
     }
@@ -61,10 +65,23 @@ export class ProductService extends SuperService {
      * @param {*} param0.productId 产品ID 
      * @param {*} param0.type 参数类型 - 1:上传数据, 2:下发数据,3:配置数据
      */
-    addBuiltin(parameters) { 
+    addBuiltin(parameters) {
         return this.invoke({
             url: `/product/addProductField`,
             method: 'post',
+            data: parameters
+        });
+    }
+    /**
+     * 产品更新运维数据
+     * @param {*} param0 
+     * @param {*} param0.productId 产品ID 
+     * @param {*} param0.type 参数类型 - 1:上传数据, 2:下发数据,3:配置数据
+     */
+    updateBuiltin(parameters) {
+        return this.invoke({
+            url: `/product/updateProductField`,
+            method: 'put',
             data: parameters
         });
     }
@@ -93,6 +110,17 @@ export class ProductService extends SuperService {
             data: parameters
         });
     }
+    /**
+     * 产品更新传感器
+     * @param {*} parameters 
+     */
+    updateSensor(parameters) {
+        return this.invoke({
+            url: `${this.url}/updateSensor`,
+            method: 'put',
+            data: parameters
+        });
+    }
 
     /**
      * 产品移除传感器
@@ -104,6 +132,45 @@ export class ProductService extends SuperService {
             url: `${this.url}/removeSensor`,
             method: 'delete',
             data: parameters
+        });
+    }
+
+
+    //     /product/addFieldsUploadByProductId
+    // 新增设备上传数据
+    addFieldsUpload(parameters) {
+        return this.invoke({
+            url: `${this.url}/fieldsUpload`,
+            method: 'post',
+            data: parameters
+        });
+    }
+    updateFieldsUpload(parameters) {
+        return this.invoke({
+            url: `${this.url}/fieldsUpload`,
+            method: 'put',
+            data: parameters
+        });
+    }
+
+    removeFieldsUpload({ ids, type = 1 }) {
+        return this.invoke({
+            url: `${this.url}/removeProductField`,
+            method: 'delete',
+            data: { ids, type }
+        });
+    }
+
+    getFieldsUploadByProductId({ productId }) {
+        return this.invoke({
+            url: `${this.url}/fieldsUploadByProductId/${productId}`,
+            method: 'get'
+        });
+    }
+    getFieldsUpload({ productFieldId }) {
+        return this.invoke({
+            url: `${this.url}/fieldsUpload/${productFieldId}`,
+            method: 'get'
         });
     }
 

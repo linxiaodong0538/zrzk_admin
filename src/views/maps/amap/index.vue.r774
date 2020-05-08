@@ -1,0 +1,252 @@
+<template>
+  <div>
+    <el-amap vid="amap"
+      :amap-manager="manager"
+      :plugin="plugins"
+      :zoom="zoom"
+      :events="events"
+      class="amap">
+      <el-amap-marker v-for="(marker, index) in [...markers, ...parts]"
+        :key="index"
+        :icon="marker.icon || undefined"
+        :position="marker.position"
+        :events="marker.events"
+        :draggable="marker.draggable"
+        :vid="index">
+      </el-amap-marker>
+      <el-amap-info-window :visible="windowInfo.visible"
+        vid="infow"
+        :position="windowInfo.position"
+        v-if="windowInfo">
+        <device-info v-if="current.node && current.node.deviceId"
+          ref="dinfo"
+          class="popup"
+          v-model="current.node"
+          @refresh="refresh"></device-info>
+        <parts-info v-else-if="current.node"
+          ref="pinfo"
+          class="popup"
+          v-model="current.node"
+          @refresh="refresh"></parts-info>
+      </el-amap-info-window>
+    </el-amap>
+  </div>
+</template>
+<script>
+import { dataDisplay } from "@/api/dataCenter/dataCenter.js";
+import { renderVNodesToString, renderVNode, renderer } from "vue";
+import DeviceInfo from "./info_device.vue";
+import PartsInfo from "./info_parts.vue";
+import { MapStyles } from "./data";
+import { AMapManager, Marker } from "vue-amap";
+
+export default {
+  components: { PartsInfo, DeviceInfo },
+  data() {
+    return {
+      map: null,
+      toolBar: null,
+      controlBar: null,
+      manager: new AMapManager(),
+      parts: [],
+      markers: [],
+      plugins: ["ToolBar"],
+      zoom: 12,
+      books: {
+        "8fc06ded-e20b-4e3e-9059-91283d96033c": "cover-opened-sensor",
+        "61b82e7f-ecb0-4ad2-93ca-44ef7a603425": "water-level",
+        cover: "cover",
+        lantern: "lantern"
+      },
+      events: {
+        init: map => {
+          console.log("amap init", map);
+          this.map = map;
+          // this.map = manager.getMap();
+          this.$nextTick(() => {
+            this.load();
+          });
+        }
+      },
+      icons: {
+        /** 警告 */
+        caution: {
+          cover: require("@/assets/maps/devices/caution/cover.png"),
+          lantern: require("@/assets/maps/devices/caution/lantern.png"),
+          "water-level": require("@/assets/maps/devices/caution/water-level.png"),
+          "cover-opened-sensor": require("@/assets/maps/devices/caution/cover-opened-sensor.png")
+        },
+        /** 在线 */
+        online: {
+          cover: require("@/assets/maps/devices/online/cover.png"),
+          lantern: require("@/assets/maps/devices/online/lantern.png"),
+          "water-level": require("@/assets/maps/devices/online/water-level.png"),
+          "cover-opened-sensor": require("@/assets/maps/devices/online/cover-opened-sensor.png")
+        },
+        /** 离线 */
+        offline: {
+          cover: require("@/assets/maps/devices/offline/cover.png"),
+          lantern: require("@/assets/maps/devices/offline/lantern.png"),
+          "water-level": require("@/assets/maps/devices/offline/water-level.png"),
+          "cover-opened-sensor": require("@/assets/maps/devices/offline/cover-opened-sensor.png")
+        }
+      },
+      opts: {
+        width: 450, // 信息窗口宽
+        // title: "设备信息", // 信息窗口标题
+        enableAutoPan: true,
+        enableMessage: true //设置允许信息窗发送短息
+      },
+      windowInfos: [],
+      windowInfo: '',
+      current: {
+        node: null,
+        parts: null,
+        device: null,
+        position: [229, 106],
+        html: null,
+      },
+      layout: {
+
+      },
+      isOpen: false,
+      isShowInfo: false
+    };
+  },
+  mounted() {
+    // this.map = this.manager.getMap();
+    // this.init();
+    // window.setInterval(() => {
+    //     this.load();
+    // }, 15000);
+  },
+  methods: {
+    load() {
+      const h = this.$createElement;
+      const template = ``;
+      this.clearMarker();
+      dataDisplay().then(({ rows }) => {
+        const markers = [];
+        rows.forEach(x => {
+          if (!(x.longitude && x.latitude)) return true;
+          const coordinate = [x.longitude, x.latitude];
+          const icon = this.icons[
+            x.isAlert
+              ? "caution"
+              : x.onlineStatus == 1
+                ? "online"
+                : "offline"
+          ][this.books[x.productTypeId]];
+          const events = {
+            click: e => {
+              const target = e.target;
+              const node = x; //target.getExtData();
+              this.current.node = node;
+              const { lng, lat } = target.getPosition();
+              this.current.position = [lng, lat];
+              // console.log(this.current.position);
+              // console.log("click", e, node);
+              this.$nextTick(() => {
+                this.isShowInfo = true;
+              });
+            }
+          };
+          let marker = {
+            icon: icon,
+            position: coordinate,
+            extData: x,
+            events
+          };
+
+          // marker.setSize(new AMap.Size(30, 30));
+          markers.push(marker);
+        });
+        console.log("markers", markers);
+        this.markers = markers;
+      });
+
+      this.$parts.getMapList().then(({ rows }) => {
+        console.log("res", arguments[0]);
+        let parts = [];
+        (rows || []).forEach((x, i) => {
+          if (!(x.longitude && x.latitude)) return true;
+          const coordinate = [x.longitude, x.latitude];
+          const icon = this.icons[
+            x.isAlert
+              ? "caution"
+              : x.onlineStatus == 1
+                ? "online"
+                : "offline"
+          ][this.books[x.parentType]];
+
+          const events = {
+            click: e => {
+              const target = e.target;
+              const node = x; //target.getExtData();
+              this.current.node = node;
+              const { lng, lat } = target.getPosition();
+              this.current.position = [lng, lat];
+
+              console.log(this.current.position);
+              console.log("click", e, node);
+              this.windowInfos.forEach(item => {
+                item.visible = false;
+              });
+    
+              this.windowInfo = this.windowInfos[i];
+              this.$nextTick(() => {
+                this.windowInfo.visible = true;
+              });
+            }
+          };
+
+          let marker = {
+            icon: icon,
+            position: coordinate,
+            extData: x,
+            events
+          };
+
+          this.windowInfos.push({
+            position: coordinate,
+            visible: false
+          });
+          parts.push(marker);
+        });
+        this.parts = parts;
+      });
+    },
+    clearMarker() {
+      this.markers = [];
+    },
+    refresh() { },
+    infoInit() { },
+    closeInfoWin() {
+      alert(5);
+      this.isOpen = false;
+    },
+    openInfoWin() {
+      alert(5);
+      this.isOpen = true;
+    }
+  }
+};
+</script>
+<style lang="scss" scoped>
+.el-vue-amap-container,
+.el-vue-amap-container .el-vue-amap {
+  width: 100%;
+  height: calc(100vh - 85px);
+}
+</style>
+<style>
+.amap-icon {
+  width: 30px;
+}
+.amap-icon img {
+  width: 100%;
+}
+.popup {
+  width: 450px;
+}
+</style>

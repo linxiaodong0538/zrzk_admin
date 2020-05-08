@@ -100,12 +100,15 @@ const actions = {
             })
         })
     },
-    // 获取组织分组信息
+    /**
+     * 获取产品类型
+     * @param {*} param0 
+     */
     GetProductTypes({ commit, state }) {
         return new Promise((resolve, reject) => {
             $producttype.get().then(res => {
-                const data = res.data;
-                commit('SET_PRODUCT_TYPES', data);
+                const data = res.rows;
+                commit('SET_PRODUCT_TYPES', rows);
                 resolve(res)
             }).catch(error => {
                 reject(error)

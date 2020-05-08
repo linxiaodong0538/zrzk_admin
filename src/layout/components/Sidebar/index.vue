@@ -12,7 +12,7 @@
         :collapse-transition="false"
         mode="vertical"
       >
-        <sidebar-item v-for="route in permission_routes" :key="route.path" :item="route" :base-path="route.path" />
+        <sidebar-item v-for="(route,idx) in permission_routes" :key="route.path + idx" :item="route" :base-path="route.path" :data-key="route.id" /> 
       </el-menu>
     </el-scrollbar>
   </div>

@@ -13,7 +13,7 @@
         <template v-for="opt in options">
             <!-- <el-col :xs="item.xs || 24" :sm="item.sm || 12" :md="item.md || 8" :lg="item.lg || 6" :xl="item.xl || 6"> -->
             <slot v-if="opt.type==='slot'" :name="opt.prop"></slot>
-            <el-form-item v-else :label="opt.label" :prop="opt.prop">
+            <el-form-item v-else :label="opt.label" :prop="opt.prop" :key="opt.prop">
                 <el-date-picker
                     v-if="opt.type==='date'"
                     v-model="form[opt.prop]"
@@ -56,14 +56,16 @@
                     <template slot="append" v-if="opt.append">{{ item['append'] }}</template>
                 </el-input-number>
                 <el-select
-                    v-else-if="opt.options || opt.type === 'select'"
+                    v-else-if="opt.type === 'select'"
                     v-model="form[opt.prop]"
                     :multiple="opt.multiple || false"
                     collapse-tags
                     :placeholder="hasPlaceholder?opt.placeholder||'全部':''"
                     :clearable="opt.clearable !== undefined?opt.clearable:undefined"
+                    :filterable="opt.filterable !== undefined?opt.filterable:undefined"
                     :disabled="opt.disabled"
                     style="width: 240px;"
+                    @change="change({ category: opt.prop, value: form[opt.prop], data: opt.options.find(x=>x.value===form[opt.prop]) }) "
                 >
                     <el-option
                         v-for="(item) in opt.options"
@@ -72,6 +74,7 @@
                         :value="item.value"
                     ></el-option>
                 </el-select>
+                <x-input v-else-if="opt.type ==='xinput'" v-model="form[opt.prop]" :options="opt.options"></x-input>
                 <el-input
                     v-else
                     v-model="form[opt.prop]"
@@ -79,6 +82,7 @@
                     :placeholder="hasPlaceholder?opt.placeholder||'全部':''"
                     :type="opt.type==='textarea'?'textarea':undefined"
                     :clearable="opt.clearable !== undefined?opt.clearable:undefined"
+                    :disabled="opt.disabled"
                     style="width: 240px;"
                 >
                     <template slot="append" v-if="opt.append">{{ item['append'] }}</template>
@@ -92,17 +96,19 @@
         <el-form-item>
             <el-button
                 v-if="hasSearch"
-                class="button"
                 type="primary"
-                size="mini"
+                class="button" 
+                size="mini" 
                 icon="el-icon-search"
                 @click.prevent="submitForm"
             >搜索</el-button>
             <el-button
                 v-if="hasReset"
-                class="button"
+                type="primary"
+                class="button" 
                 icon="el-icon-refresh"
                 size="mini"
+                plain
                 @click.prevent="resetForm"
             >重置</el-button>
             <!-- <el-button
@@ -120,8 +126,9 @@
 <script>
 import moment from "moment";
 import Treeselect from "@riophae/vue-treeselect";
+import { default as XInput } from "./xinput.vue";
 export default {
-    components: { Treeselect },
+    components: { Treeselect, XInput },
     props: {
         inline: {
             type: Boolean,
@@ -372,6 +379,10 @@ export default {
                 }
             });
         },
+        change(parameters) {
+            console.log("change", parameters);
+            this.$emit(`change`, parameters);
+        },
 
         resetForm() {
             this.$refs["form"].resetFields();
@@ -415,7 +426,7 @@ export default {
  */
 </script> 
 <style  >
-.el-input-number .el-input__inner{
+.el-input-number .el-input__inner {
     text-align: left !important;
 }
 </style>

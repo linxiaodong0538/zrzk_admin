@@ -9,3 +9,6 @@ export { ProductService } from './product.service';
 export { ProductTypeService } from './productType.service';
 export { SensorService } from './sensor.service';
 export { SensorTypeService } from './sensorType.service';
+export { PartsService } from './parts.service';
+export { PartsTypeService } from './partsType.service';
+export { LampService } from './lamp.service';

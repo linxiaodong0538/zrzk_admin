@@ -17,7 +17,6 @@ export default {
         return all_permission === permission || permissionFlag.includes(permission)
       })
 
-
       if (!hasPermissions) {
         el.parentNode && el.parentNode.removeChild(el)
       }

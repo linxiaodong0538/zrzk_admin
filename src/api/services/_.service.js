@@ -18,12 +18,12 @@ export class SuperService {
             params: query || {}
         })
     }
-    search(query) { 
+    search(query) {
         return request({
             url: `${this.url}/list`,
             method: 'post',
             data: query || {}
-        })   
+        })
     }
 
     /**  查询用户详细 */
@@ -49,7 +49,7 @@ export class SuperService {
             data: parameters
         })
     }
-   
+
     /**  修改用户 */
     update(parameters) {
         return request({
@@ -100,6 +100,15 @@ export class SuperService {
     download(parameters) {
         return request({
             url: `${this.url}/export`,
+            method: 'post',
+            data: parameters
+        })
+    }
+
+    /** 校验 */
+    validate(parameters) {
+        return request({
+            url: `${this.url}/validate`,
             method: 'post',
             data: parameters
         })

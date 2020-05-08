@@ -26,102 +26,115 @@ import Layout from '@/layout'
 
 // 公共路由
 export const constantRoutes = [
-  {
-    path: '/redirect',
-    component: Layout,
-    hidden: true,
-    children: [
-      {
-        path: '/redirect/:path*',
-        component: () => import('@/views/redirect')
-      }
-    ]
-  },
-  {
-    path: '/login',
-    component: () => import('@/views/login'),
-    hidden: true
-  },
-  {
-    path: '/404',
-    component: () => import('@/views/error/404'),
-    hidden: true
-  },
-  {
-    path: '/401',
-    component: () => import('@/views/error/401'),
-    hidden: true
-  },
-  {
-    path: '',
-    component: Layout,
-    redirect: 'index',
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/index'),
-        name: '首页',
-        meta: { title: '首页', icon: 'dashboard', noCache: true, affix: true }
-      }
-    ]
-  },
-  {
-    path: '/user',
-    component: Layout,
-    hidden: true,
-    redirect: 'noredirect',
-    children: [
-      {
-        path: 'profile',
-        component: () => import('@/views/system/user/profile/index'),
-        name: '个人中心',
-        meta: { title: '个人中心', icon: 'user' }
-      }
-    ]
-  },
-  {
-    path: '/dict',
-    component: Layout,
-    hidden: true,
-    children: [
-      {
-        path: 'type/data/:dictId(\\d+)',
-        component: () => import('@/views/system/dict/data'),
-        name: '字典数据',
-        meta: { title: '字典数据', icon: '' }
-      }
-    ]
-  },
-  {
-    path: '',
-    component: Layout,
-    hidden: true,
-    children: [
-      {
-        path: 'deviceDetails/:dictId(\\d+)',
-        component: () => import('@/views/manholeCover/monitoring/deviceDetails/data'),
-        name: '设备详情',
-        meta: { title: '设备详情', icon: '' }
-      }
-    ]
-  },
-  {
-    path: '',
-    component: Layout,
-    hidden: true,
-    children: [
-      {
-        path: 'historicalData/:dictId(\\d+)',
-        component: () => import('@/views/manholeCover/monitoring/historicalData/data'),
-        name: '历史数据',
-        meta: { title: '历史数据', icon: '' }
-      }
-    ]
-  },
+    {
+        path: '/redirect',
+        component: Layout,
+        hidden: true,
+        children: [
+            {
+                path: '/redirect/:path*',
+                component: () => import('@/views/redirect')
+            }
+        ]
+    },
+    {
+        path: '/login',
+        component: () => import('@/views/login'),
+        hidden: true
+    },
+    {
+        path: '/404',
+        component: () => import('@/views/error/404'),
+        hidden: true
+    },
+    {
+        path: '/401',
+        component: () => import('@/views/error/401'),
+        hidden: true
+    },
+    {
+        path: '',
+        component: Layout,
+        redirect: 'index',
+        children: [
+            {
+                path: 'index',
+                component: () => import('@/views/index'),
+                name: '首页',
+                meta: { title: '首页', icon: 'dashboard', noCache: true, affix: true }
+            }
+        ]
+    },
+    {
+        path: '/user',
+        component: Layout,
+        hidden: true,
+        redirect: 'noredirect',
+        children: [
+            {
+                path: 'profile',
+                component: () => import('@/views/system/user/profile/index'),
+                name: '个人中心',
+                meta: { title: '个人中心', icon: 'user' }
+            }
+        ]
+    },
+    {
+        path: '/dict',
+        component: Layout,
+        hidden: true,
+        children: [
+            {
+                path: 'type/data/:dictId(\\d+)',
+                component: () => import('@/views/system/dict/data'),
+                name: '字典数据',
+                meta: { title: '字典数据', icon: '' }
+            }
+        ]
+    },
+    {
+        path: '/monitoring',
+        component: () => import('@/views/monitoring/index'),
+        name: '监控大屏2',
+        hidden: true
+    },
+    {
+        path: '/dashmap',
+        name: '监控大屏',
+        component: () => import('@/views/dashboard/dashmap/index'),
+        hidden: true
+    },
+    {
+        path: '',
+        component: Layout,
+        hidden: true,
+        children: [
+            {
+                path: 'deviceDetails/:dictId',
+                component: () => import('@/views/manholeCover/monitoring/deviceDetails/data'),
+                name: '设备详情',
+                meta: { title: '设备详情', icon: '' }
+            }
+        ]
+    },
+    {
+        path: '',
+        component: Layout,
+        hidden: true,
+        children: [
+            {
+                path: 'lightingHistory',
+                component: () => import('@/views/lampPost/lighting/lanterns/data'),
+                // src\views\lampPost\lighting\lanterns\data.vue
+                name: 'lightingHistory',
+                meta: { title: '历史数据', icon: '' }
+            }
+        ]
+    },
 ]
 
 export default new Router({
-  mode: 'history', // 去掉url中的#
-  scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes
+    mode: 'hash', // 去掉url中的#  history
+    scrollBehavior: () => ({ y: 0 }),
+    routes: constantRoutes
 })

@@ -110,6 +110,7 @@ export function updateUserPwd(oldPassword, newPassword) {
 
 // 用户头像上传
 export function uploadAvatar(data) {
+  console.log(data);
   return request({
     url: '/system/user/profile/avatar',
     method: 'post',

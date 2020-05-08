@@ -1,211 +1,201 @@
 <template>
-  <div class="xny-region">
-    <div class="Navigation">
-      <span class="Monitor" :class="{xny_highlight:navBAr==0}" @click="navBAr=0">网关监控</span>
-      <span class="History" :class="{xny_highlight:navBAr==1}" @click="navBAr=1">回路监控</span>
-      <span class="History" :class="{xny_highlight:navBAr==2}" @click="navBAr=2">历史数据</span>
-    </div>
-    <div v-if="navBAr==0">
-      <div class="region">
-        <div class="box-header">
-          <div class="tabBackground" :class="{tabBackgrounddefault:fla==0}" @click="region">区域</div>
-          <div class="tabBackground2" :class="{tabBackgrounddefault:fla==1}" @click="coverGroup">分组</div>
-        </div>
-        <div v-show="fla == 0" class="regionList">
-          <div class="head-container">
-            <el-tree
-              :data="deptOptions"
-              :props="defaultProps"
-              :expand-on-click-node="false"
-              :filter-node-method="filterNode"
-              ref="tree"
-              default-expand-all
-              @node-click="handleNodeClick"
-            />
-          </div>
-        </div>
-        <div v-show="fla == 1" class="regionList">
-          <div class="head-container">
-            <el-tree
-              :data="deptOptions"
-              :props="defaultProps"
-              :expand-on-click-node="false"
-              :filter-node-method="filterNode"
-              ref="tree"
-              default-expand-all
-              @node-click="handleNodeClick1"
-            />
-          </div>
-        </div>
-      </div>
-      <div class="xny-search">
-        <!-- v-model="deptName" -->
-        <div class="xny-cover">
-          <div class="xny-Manhole">
-            <span class="coverList">网关类型:</span>
-            <el-select v-model="value" placeholder>
-              <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-                size="small"
-                class="Manhole"
-              ></el-option>
-            </el-select>
-            <span class="coverList">所属项目:</span>
-            <el-select v-model="value" placeholder>
-              <el-option
-                v-for="item in options"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-                size="small"
-                class="Manhole"
-              ></el-option>
-            </el-select>
-            <!-- @click="handleQuery" -->
-            <!-- -->
-            <el-button type="primary" icon="el-icon-search" size="mini" class="coverSearch">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-          </div>
-        </div>
-        <div class="coverForm">
-          <!-- @click="handleImport" -->
-          <!-- v-hasPermi="['system:user:import']" -->
-          <el-row :gutter="10" class="mb8">
-            <el-col :span="1.5">
+  <div class="app-container">
+    <el-row :gutter="20">
+      <!--部门数据-->
+      <el-col :span="4" :xs="24">
+        <x-org
+          :filter-node-method="filterNode"
+          :isFilterable="true"
+          :default-expand-all="true"
+          @node-click="handleNodeClick"
+        ></x-org>
+      </el-col>
+      <!--用户数据-->
+      <el-col :span="20" :xs="24">
+        <x-form
+          :options="formOptions"
+          :form="formData"
+          :rules="formRules"
+          labelWidth="68px"
+          @callback="search"
+          @change="change"
+        ></x-form>
+
+        <el-row :gutter="10" class="mb8">
+          <!-- <el-col :span="1.5">
+                        <el-button
+                            type="primary"
+                            icon="el-icon-plus"
+                            size="mini"
+                            @click="handleAdd"
+                            v-hasPermi="['system:user:add']"
+                        >新增</el-button>
+                    </el-col>
+                    <el-col :span="1.5">
+                        <el-button
+                            type="success"
+                            icon="el-icon-edit"
+                            size="mini"
+                            :disabled="single"
+                            @click="handleUpdate"
+                            v-hasPermi="['system:user:edit']"
+                        >修改</el-button>
+                    </el-col>
+                    <el-col :span="1.5">
+                        <el-button
+                            type="danger"
+                            icon="el-icon-delete"
+                            size="mini"
+                            :disabled="multiple"
+                            @click="handleDelete"
+                            v-hasPermi="['system:user:remove']"
+                        >删除</el-button>
+                    </el-col>
+                    <el-col :span="1.5">
+                        <el-button
+                            type="info"
+                            icon="el-icon-upload2"
+                            size="mini"
+                            @click="handleImport"
+                            v-hasPermi="['system:user:import']"
+                        >导入</el-button>
+          </el-col>-->
+          <el-col :span="1.5">
+            <el-button
+              type="warning"
+              icon="el-icon-download"
+              size="mini"
+              @click="handleExport"
+              v-hasPermi="['system:user:export']"
+            >导出</el-button>
+          </el-col>
+        </el-row>
+
+        <x-table
+          ref="xtable"
+          :options="tableOptions"
+          :data="models"
+          :loading="loading"
+          :hasReset="true"
+          :isSelectable="true"
+          :isPaging="true"
+          :pagination="pagination"
+          @page-change="search"
+          @selection-change="select"
+          @deviceCode="view"
+        >
+          <el-table-column
+            label="操作"
+            align="center"
+            width="180"
+            class-name="small-padding fixed-width"
+          >
+            <template slot-scope="scope">
               <el-button
-                type="info"
-                icon="el-icon-upload2"
                 size="mini"
-                v-hasPermi="['system:user:import']"
-              >导入</el-button>
-            </el-col>
-            <el-col :span="1.5">
-              <el-button
-                type="warning"
-                icon="el-icon-download"
-                size="mini"
-                @click="handleExport"
-                v-hasPermi="['system:dict:export']"
-              >导出</el-button>
-            </el-col>
-          </el-row>
-          <!-- v-loading="loading" -->
-          <el-table :data="typeList" @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="55" align="center" />
-            <el-table-column label="网关类型" min-width="100" align="center" prop="controllerAddress" />
-            <el-table-column label="网关名称" align="center" prop="onlineState" />
-            <el-table-column label="网关地址" align="center" prop="deviceState" />
-            <el-table-column label="在线状态" align="center" prop="alarmView" />
-            <el-table-column label="经度" align="center" prop="processing" />
-            <el-table-column label="纬度" align="center" prop="voltage" />
-            <el-table-column label="区域" align="center" prop="current" />
-            <el-table-column label="控制箱编号" min-width="100" align="center" prop="activePower" />
-            <el-table-column label="设备回路数" min-width="120" align="center" prop="reactivePower" />
-            <el-table-column label="TCP注册包" min-width="100" align="center" prop="powerFactor" />
-            <el-table-column label="变比" align="center" prop="temperature" />
-            <el-table-column label="修改日期" align="center" prop="signalIntensity" />
-            <el-table-column label="修改人" align="center" prop="NB_IMSI" />
-            <el-table-column label="所属项目" align="center" prop="apparentPower" />
-            <!-- fixed="right" -->
-            <el-table-column label="操作">
-              <template slot-scope="scope">
-                <el-button class="edit" icon="el-icon-edit" type="primary" @click="handleUpdate">编辑</el-button>
-                 <br />
-                <el-button
-                  class="edit"
-                  type="success"
-                  @click="loopManagement"
-                >回路管理</el-button>
-                <el-button
-                  class="edit"
-                  icon="el-icon-delete"
-                  type="danger"
-                  @click="handleDelete(scope.$index,typeList)"
-                >删除</el-button>
-              </template>
-            </el-table-column>
-         
-          </el-table>
-          <!-- @pagination="getList" -->
-          <pagination
-            v-show="total>0"
-            :total="total"
-            :page.sync="queryParams.pageNum"
-            :limit.sync="queryParams.pageSize"
-            @pagination="2"
-          />
-        </div>
-      </div>
-    </div>
-    <!-- 编辑 -->
-    <el-dialog :title="title" :visible.sync="open" width="800px">
-      <loopEditing :id="management.id" :label="management.label" @cancel="cancel"></loopEditing>
+                type="text"
+                @click="view({ category: 'history', data: scope.row})"
+              >历史数据</el-button>
+              <!-- <el-button
+                                size="mini"
+                                type="text"
+                                icon="el-icon-search"
+                                @click="handleView(scope.row)"
+                                v-hasPermi="['system:sensor:view']"
+                            >查看</el-button>
+                            <el-button
+                                size="mini"
+                                type="text"
+                                icon="el-icon-edit"
+                                @click="handleUpdate(scope.row)"
+                                v-hasPermi="['system:user:edit']"
+                            >修改</el-button>
+                            <el-button
+                                size="mini"
+                                type="text"
+                                icon="el-icon-delete"
+                                @click="handleDelete(scope.row)"
+                                v-hasPermi="['system:user:remove']"
+              >删除</el-button>-->
+            </template>
+          </el-table-column>
+        </x-table>
+      </el-col>
+    </el-row>
+
+    <!-- 添加或修改参数配置对话框 -->
+    <x-dialog
+      :title="title"
+      :form="dialogForm"
+      :options="dialogOptions"
+      :rules="dialogRules"
+      :visible.sync="dialogVisible"
+      @callback="submitForm"
+      @change="change"
+      @focus="onListen"
+    >
+      <template>
+        <el-col :span="24">
+          <div>自定义：</div>
+        </el-col>
+        <template v-for="(f, idx) in fields">
+          <el-col :span="12" :key="idx">
+            <el-form-item
+              :label="f.partsFieldNameCn"
+              :prop="f.partsFieldName"
+              :key="f.partsFieldName"
+              size="mini"
+            >
+              <el-input v-model="dialogForm[f.partsFieldName]">
+                <template slot="append">{{f.unit}}</template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </template>
+      </template>
+    </x-dialog>
+
+    <el-dialog :visible.sync="isDetailVisible"></el-dialog>
+    <el-dialog :visible.sync="isBaiduMapDialogVisible" :append-to-body="true">
+      <template>
+        <baidu-map
+          class="bm-view"
+          center="福州"
+          :zoom="1"
+          style="width: 100%; min-height: 50vh;"
+          ak="k1gYhyr8h8ksQN63Z1Mu0xNuhiZCr157"
+        ></baidu-map>
+      </template>
     </el-dialog>
-    <!-- 回路管理 -->
-    <el-dialog :title="title" :visible.sync="administration" width="800px">
-      <management :id="management.id" :label="management.label" @cancel1="cancel1"></management>
-    </el-dialog>
-    <div v-if="navBAr==1">
-      <loopMonitoring></loopMonitoring>
-    </div>
-    <div v-if="navBAr==2">
-      <historicalData></historicalData>
-    </div>
   </div>
 </template>
-<script>
-//   wellGroup
 
-import loopEditing from "./loopEditing"; //编辑
-import management from "./management"; //回路管理
-import loopMonitoring from "./loopMonitoring"; //回路监控
-import historicalData from "./historicalData"; //历史数据
-import { region, coverForm } from "@/api/system/cover/coverManagement";
-import { treeselect } from "@/api/system/dept";
+<script>
+import {
+  listUser,
+  getUser,
+  delUser,
+  addUser,
+  updateUser,
+  exportUser,
+  resetUserPwd,
+  changeUserStatus
+} from "@/api/system/user";
+import { treeselect, region } from "@/api/system/dept";
+import { listPost } from "@/api/system/post";
+import { listRole } from "@/api/system/role";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+import { XTable, XForm, XTree, XDialog, XOrg } from "@/components";
+import { Paginator } from "@/dtos/paginator";
+import moment from "moment";
+import { DialogOptions, FormOptions } from "./options.data";
+import BaiduMap from "vue-baidu-map/components/map/Map.vue";
+
 export default {
-  components: { loopEditing, loopMonitoring, historicalData, management },
+  components: { BaiduMap, Treeselect, XTable, XForm, XTree, XDialog, XOrg },
   data() {
     return {
-      // 区域/分组
-      fla: 0,
-      //导航栏
-      navBAr: 0,
-      // 部门树选项
-      deptOptions: [],
-      deptOptions: [],
-
-      defaultProps: {
-        children: "children",
-        label: "label"
-      },
-      //创建时间
-      creationTime: "",
-      options: [
-        {
-          value: "1",
-          label: "所有"
-        },
-        {
-          value: "2",
-          label: "项目5"
-        },
-        {
-          value: "3",
-          label: "项目6"
-        },
-        {
-          value: "4",
-          label: "项目4"
-        },
-        {
-          value: "5",
-          label: "项目3"
-        }
-      ],
-      value: "所有",
       // 遮罩层
       loading: true,
       // 选中数组
@@ -215,114 +205,294 @@ export default {
       // 非多个禁用
       multiple: true,
       // 总条数
-      //   total: 0,
-      total: 10,
-      // 井盖管理数据
-      typeList: [
-        {
-          controllerAddress: "一代网关", //灯控制器地址
-          onlineState: "007", //在线状态
-          deviceState: "007", //设备状态
-          alarmView: "离线", //报警查看
-          processing: "0", //一键处理
-          voltage: "0", //电压
-          current: "鼓西街道", //电流
-          activePower: "-", //有功功率
-          reactivePower: "-", //有功功率
-          powerFactor: "-", //功率因数
-          temperature: "-", //温度
-          signalIntensity: "-", //信号强度
-          NB_IMSI: "-", //NB_IMSI
-          apparentPower: "-", //视在电能
-          runningTime: "-", //运行时间
-          reportingTime: "-" //上报时间
-        }
-      ],
+      total: 0,
+      // 用户表格数据
+      userList: null,
       // 弹出层标题
       title: "",
-      // 编辑
+      // 部门树选项
+      areaOptions: undefined,
+      // 是否显示弹出层
       open: false,
-      // 回路管理
-      administration: false,
-      // 状态数据字典
-      statusOptions: [],
+      // 部门名称
+      deptName: undefined,
+      fieldOptions: [],
       // 日期范围
       dateRange: [],
-      // 查询参数
-      queryParams: {
-        pageNum: 1,
-        pageSize: 10,
-        dictName: "",
-        dictType: "",
-        status: ""
+      // 状态数据字典
+      statusOptions: [],
+      // 岗位选项
+      postOptions: [],
+      // 角色选项
+      roleOptions: [],
+      /** 区域选项 */
+      areaOptions: [],
+      /** 自定义字段 */
+      fields: [],
+      partsTypeOptions: [],
+      products: [],
+      productOptions: [],
+      current: {
+        groupId: undefined,
+        areaId: undefined
       },
-      //新增区域传参
-      management: {
-        id: "",
-        label: ""
+      cache: {
+        categories: {},
+        onlineStatus: {},
+        runningState: {},
+        alertStatus: {}
       },
-      //分组传参
-      managementGrouping: {
-        id: "",
-        label: ""
-      }
+      // 表单参数
+      form: {},
+      defaultProps: {
+        children: "children",
+        label: "label"
+      },
+      /** form ^ */
+      /** 查询参数 */
+      formData: {},
+      formOptions: FormOptions,
+      formRules: {},
+      categories: [],
+      /** form $ */
+      /** table ^ */
+      pagination: new Paginator(),
+      options: [
+        { prop: "productName", label: "产品名称" },
+        { prop: "deviceCode", label: "设备编号", click: true },
+        { prop: "partsCode", label: "部件编号" },
+        { prop: "areaName", label: "所在区域" },
+        {
+          prop: "onlineStatus",
+          label: "在线状态",
+          formatter: this.mapping
+        },
+        {
+          prop: "runningState",
+          label: "运行状态",
+          formatter: this.mapping
+        },
+        { prop: "createDate", label: "采集时间" }
+      ],
+      tableOptions: [],
+      models: [],
+      /** table $ */
+      /** dialog ^ */
+      dialogForm: {},
+      dialogOptions: DialogOptions,
+      dialogRules: {
+        partsName: [
+          {
+            required: true,
+            message: "必填",
+            trigger: "blur"
+          }
+        ],
+        partsTypeId: [
+          {
+            required: true,
+            message: "必选",
+            trigger: "blur"
+          }
+        ],
+        areaId: [
+          {
+            required: true,
+            message: "必选",
+            trigger: "blur"
+          }
+        ]
+      },
+      dialogVisible: false,
+      /** dialog $ */
+      // 表单校验
+      rules: {
+        userName: [
+          {
+            required: true,
+            message: "用户名称不能为空",
+            trigger: "blur"
+          }
+        ],
+        nickName: [
+          {
+            required: true,
+            message: "用户昵称不能为空",
+            trigger: "blur"
+          }
+        ],
+        areaId: [
+          {
+            required: true,
+            message: "归属部门不能为空",
+            trigger: "blur"
+          }
+        ],
+        password: [
+          {
+            required: true,
+            message: "用户密码不能为空",
+            trigger: "blur"
+          }
+        ],
+        email: [
+          {
+            type: "email",
+            message: "'请输入正确的邮箱地址",
+            trigger: ["blur", "change"]
+          }
+        ],
+        phonenumber: [
+          {
+            pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/,
+            message: "请输入正确的手机号码",
+            trigger: "blur"
+          }
+        ]
+      },
+
+      /** view detail ^ */
+      isDetailVisible: false,
+      isBaiduMapDialogVisible: false
+      /** view detail $ */
     };
   },
-
-  mounted() {
-    //   console.log(this.typeList.length);
-
-    //区域
-    this.getTreeselect();
-    //井盖表格所有数据
-    // this.getList();
-
-    this.getDicts("sys_normal_disable").then(response => {
-      this.statusOptions = response.data;
+  watch: {
+    // 根据名称筛选部门树
+    deptName(val) {
+      this.$refs.tree.filter(val);
+    }
+  },
+  created() {
+    this.tableOptions = this.options.slice();
+    console.log(
+      this.formOptions
+        .map(x => {
+          return `${x.prop}: ''`;
+        })
+        .join(",")
+    );
+    this.search();
+    this.getTreeData();
+    this.getDicts("sys_normal_disable").then(({ data }) => {
+      this.statusOptions.push(
+        ...data.map(x => ({
+          label: x.dictLabel,
+          value: x.dictValue
+        }))
+      );
+      let node = this.formOptions.find(x => x.prop === "status");
+      if (node) node.options = this.statusOptions;
+      node = this.dialogOptions.find(x => x.prop === "status");
+      if (node) node.options = this.statusOptions;
+      // this.statusOptions = data.map(x => ({
+      //     label: x.dictLabel,
+      //     value: x.dictValue
+      // }));
+      // this.$forceUpdate();
     });
+    this.getDicts("online_status").then(({ data }) => {
+      const opts = data.map(x => ({ label: x.dictLabel, value: x.dictValue }));
+      this.cache.onlineStatus = data.reduce(
+        (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+        {}
+      );
+      let node = this.formOptions.find(x => x.prop === "onlineStatus");
+      if (node) node.options = opts;
+    });
+    this.getDicts("running_state").then(({ data }) => {
+      const opts = data.map(x => ({
+        label: x.dictLabel,
+        value: x.dictValue
+      }));
+      this.cache.runningState = data.reduce(
+        (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+        {}
+      );
+      let node = this.formOptions.find(x => x.prop === "runningState");
+      if (node) node.options = opts;
+    });
+    this.getDicts("alert_status").then(({ data }) => {
+      const opts = data.map(x => ({
+        label: x.dictLabel,
+        value: x.dictValue
+      }));
+      this.cache.alertStatus = data.reduce(
+        (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+        {}
+      );
+      let node = this.formOptions.find(x => x.prop === "alertStatus");
+      if (node) node.options = opts;
+    });
+    this.$partstype.search({}).then(({ rows }) => {
+      this.partsTypeOptions = rows.map(x => ({
+        label: x.partsTypeName,
+        value: x.partsTypeId
+      }));
+      let node = this.dialogOptions.find(x => x.prop === "partsTypeId");
+      if (node) node.options = this.partsTypeOptions;
+    });
+
+    this.$lamp.getProducts({ productTypeId: 4 }).then(({ data }) => {
+      this.products = data;
+      this.productOptions = data.map(x => ({
+        label: x.productName,
+        value: x.productId
+      }));
+      let node = this.formOptions.find(x => x.prop === "productId");
+      if (node) node.options = this.productOptions;
+    });
+
+    this.projects = (this.$store.state.app.projects || []).map(x => ({
+      label: x.projectName,
+      value: x.projectId
+    }));
+    let node = this.formOptions.find(x => x.prop == "projectId");
+    if (node) node.options = this.projects;
+    node = this.dialogOptions.find(x => x.prop === "projectIds");
+    if (node) node.options = this.projects;
   },
   methods: {
-    /** 区域 */
-    getTreeselect() {
-      //   region().then(response => {
-      //     this.deptOptions = response.data;
-      //     this.management.id = this.deptOptions[0].id;
-      //     this.management.label = this.deptOptions[0].label;
-      //     console.log(this.management.id);
-      //   });
+    /** 查询用户列表 */
+    search() {
+      console.log("trigger search", this.formData);
+      let params = Object.assign({}, this.formData, {
+        pageNum: this.pagination.index,
+        pageSize: this.pagination.size,
+        page: this.pagination.index,
+        areaId: this.current.areaId,
+        groupId: this.current.groupId,
+        productTypeId: 4
+      });
+      this.loading = true;
+      this.$lamp.search(params).then(({ rows, total }) => {
+        this.loading = false;
+        this.models = rows.map(x => {
+          x = (x.deviceFieldUploads || []).reduce(
+            (p, c) => ((p[c.deviceFieldName] = c.deviceFieldValue), p),
+            x
+          );
+          if (x.deviceFieldUploads && x.deviceFieldUploads.length) {
+            x.createDate = x.deviceFieldUploads[0].createDate;
+          }
+          console.log(this.models);
 
-      //这是静态页面的修改
-      treeselect().then(response => {
-        this.deptOptions = response.data;
-        this.management.id = this.deptOptions[0].id;
-        this.management.label = this.deptOptions[0].label;
-        // console.log(this.management.id);
+          return x;
+        });
+        this.pagination.all = total;
       });
+      window.reff = this.$refs;
     },
-    //区域
-    region() {
-      this.fla = 0;
-      //   region().then(response => {
-      //     this.deptOptions = response.data;
-      //     this.management.id = this.deptOptions[0].id;
-      //     this.management.label = this.deptOptions[0].label;
-      //   });
-      //这是静态页面的修改
-      treeselect().then(response => {
-        this.deptOptions = response.data;
-        this.management.id = this.deptOptions[0].id;
-        this.management.label = this.deptOptions[0].label;
-        // console.log(this.management.id);
+    /** 查询部门下拉树结构 */
+    getTreeData() {
+      this.$area.treeselect().then(response => {
+        this.areaOptions = response.data;
+
+        let node = this.dialogOptions.find(x => x.prop === "areaId");
+        if (node) node.options = this.areaOptions;
+        // let node = this..find(x => x.prop === "areaId");
+        // if (node) node.options = this.areaOptions;
       });
-    },
-    // 分组
-    coverGroup() {
-      this.fla = 1;
-      //   wellGroup().then(response => {
-      //     this.deptOptions = response.data;
-      //     this.managementGrouping.id = this.deptOptions[0].id;
-      //     this.managementGrouping.label = this.deptOptions[0].label;
-      //   });
     },
     // 筛选节点
     filterNode(value, data) {
@@ -330,132 +500,29 @@ export default {
       return data.label.indexOf(value) !== -1;
     },
     // 节点单击事件
-    handleNodeClick(data) {
-      this.queryParams.deptId = data.id;
-      this.management.id = data.id;
-      this.management.label = data.label;
-      //   this.getList();
+    handleNodeClick({ category, areaId, groupId, data }) {
+      this.current.areaId = areaId;
+      this.current.groupId = groupId;
+      this.search();
     },
-    handleNodeClick1(data) {
-      this.queryParams.deptId = data.id;
-
-      this.managementGrouping.id = data.id;
-      this.managementGrouping.label = data.label;
-      //   this.getList();
+    /** 查询岗位列表 */
+    getPositions() {
+      listPost().then(response => {
+        this.postOptions = response.rows;
+      });
     },
-
-    /** 重置按钮操作 */
-    resetQuery() {
-      //   this.dateRange = [];
-      //   this.resetForm("queryForm");
-      //   this.handleQuery();
+    /** 查询角色列表 */
+    getRoles() {
+      listRole().then(response => {
+        this.roleOptions = response.rows;
+      });
     },
-    //表单
-    /** 查询井盖管理 */
-    // getList() {
-    //   //  //井盖编号
-    //   // coverNumber: "",
-    //   // //创建时间
-    //   // creationTime:"",
-    //   let areaId = this.management.id;
-    //   let deviceGroupId = this.managementGrouping.id;
-    //   let coverNumber = this.coverNumber;
-    //   let creationTime = this.creationTime;
-    //   this.loading = true;
-
-    //   coverForm(this.addDateRange(this.queryParams, this.dateRange)).then(
-    //     response => {
-    //       // console.log(response);
-    //       this.typeList = response.rows;
-    //       this.total = response.total;
-    //       this.loading = false;
-    //     }
-    //   );
-    // },
-    // 字典状态字典翻译
-    statusFormat(row, column) {
-      return this.selectDictLabel(this.statusOptions, row.status);
-    },
-
-    // 表单重置
-    reset() {
-      this.form = {
-        dictId: undefined,
-        dictName: undefined,
-        dictType: undefined,
-        status: "0",
-        remark: undefined
-      };
-      this.resetForm("form");
-    },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageNum = 1;
-      //   this.getList();
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.dateRange = [];
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
-
-    // 多选框选中数据
-    handleSelectionChange(selection) {
-      // console.log(selection);
-      this.ids = selection.map(item => item.dictId);
-      this.single = selection.length != 1;
-      this.multiple = !selection.length;
-    },
-
-    /** 导出按钮操作 */
-    handleExport() {
-      const queryParams = this.queryParams;
-      console.log(queryParams);
-
-      this.$confirm("是否确认导出所有类型数据项?", "警告", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(function() {
-          return exportType(queryParams);
-          console.log(exportType(queryParams));
-        })
-        .then(response => {
-          this.download(response.msg);
-        })
-        .catch(function() {});
-    },
-    /**编辑 */
-    editing() {
-      this.reset();
-      this.open = true;
-      this.title = "修改网关管理";
-    },
-    cancel(val) {
-      this.open = val;
-      this.reset();
-    },
-    /**回路管理 */
-    loopManagement() {
-      this.reset();
-      this.administration = true;
-      this.title = "回路管理";
-    },
-    cancel1(val) {
-      this.administration = val;
-      this.reset();
-    },
-    /**回路管理 */
-    /** 删除按钮操作 */
-    handleDelete(index, row) {
-      var aa = index + 1;
-      // console.log(dictIds);
+    // 用户状态修改
+    handleStatusChange(row) {
+      let text = row.status === "0" ? "启用" : "停用";
       this.$confirm(
-        // 确认要删除选中的1条数据吗?
-        "确认要删除选中的第" + aa + "条数据吗?",
-
+        '确认要"' + text + '""' + row.userName + '"用户吗?',
+        "警告",
         {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
@@ -463,137 +530,247 @@ export default {
         }
       )
         .then(function() {
-          return delType(dictIds.length);
+          return changeUserStatus(row.userId, row.status);
         })
         .then(() => {
-          dictIds;
+          this.msgSuccess(text + "成功");
+        })
+        .catch(function() {
+          row.status = row.status === "0" ? "1" : "0";
+        });
+    },
+    // 取消按钮
+    cancel() {
+      this.open = false;
+      this.reset();
+    },
+    view({ category, data }) {
+      if (category === "history") {
+        this.$router.push({
+          path: "/lightingHistory/",
+          query: { deviceId: data.deviceId, deviceCode: data.deviceCode }
+        });
+      }
+      if (category === "deviceCode") {
+        this.$router.push({ path: "/deviceDetails/" + data.deviceId });
+      }
+    },
+    // 表单重置
+    reset() {
+      this.form = {
+        userId: undefined,
+        areaId: 100,
+        userName: undefined,
+        nickName: undefined,
+        password: undefined,
+        phonenumber: undefined,
+        email: undefined,
+        sex: undefined,
+        status: "0",
+        remark: undefined,
+        postIds: [],
+        roleIds: []
+      };
+      this.resetForm("form");
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.page = 1;
+      this.search();
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.dateRange = [];
+      this.resetForm("queryForm");
+      this.handleQuery();
+    },
+    // 多选框选中数据
+    handleSelectionChange(selection) {
+      this.ids = selection.map(item => item.partsId);
+      this.single = selection.length != 1;
+      this.multiple = !selection.length;
+    },
+    /** 新增按钮操作 */
+    handleView(data) {
+      console.log();
+      this.isDetailVisible = true;
+      this.current.node = data;
+    },
+    /** 新增按钮操作 */
+    handleAdd(t) {
+      this.dialogForm = {
+        areaId: this.current.areaId
+      };
+      this.dialogVisible = true;
+      this.title = "新增";
+    },
+    /** 修改按钮操作 */
+    async handleUpdate(row) {
+      let id = row && row.partsId ? row.partsId : this.ids[0];
+      let node = this.models.find(x => x.partsId == id);
+      let { rows } = await this.$partstype.getFields({
+        id: node.partsTypeId
+      });
+      // for (let f of rows) {
+      //     // if (!this.dialogForm.hasOwnProperty(f.partsFieldName)) {
+      //     node[f.partsFieldName] = null;
+      //     // }
+      // }
+      (node.partsFields || []).forEach(x => {
+        node[x.partsFieldName] = x.partsFieldValue;
+      });
+      if (node.project && node.project.length) {
+        node.projectIds = node.project.map(x => x.projectId);
+      }
+      console.log("d f", node);
+      this.dialogForm = Object.assign({}, node);
+      this.fields = rows;
+      this.dialogVisible = true;
+      this.title = "修改";
+    },
+    /** 提交按钮 */
+    submitForm: function() {
+      console.log("submit", this.dialogForm);
+      let params = Object.assign({}, this.dialogForm);
+      let partsFields = (this.fields || []).map(x => {
+        let f = this.dialogForm.partsFields.find(
+          x => x.partsFieldName == x.partsFieldName
+        );
+        let node = {
+          partsFieldRalId: f ? f.partsFieldRalId : undefined,
+          partsTypeFieldId: x.partsTypeFieldId,
+          partsTypeId: x.partsTypeId,
+          partsId: this.dialogForm.partsId,
+          partsFieldValue: params[x.partsFieldName]
+        };
+        delete params[x.partsFieldName];
+        return node;
+      });
+      params.partsFields = partsFields;
+      console.log("parameter", params);
+      if (params.partsId != undefined) {
+        this.$parts.update(params).then(response => {
+          if (response.code === 200) {
+            this.msgSuccess("修改成功");
+            this.dialogVisible = false;
+            this.search();
+          } else {
+            this.msgError(response.msg);
+          }
+        });
+      } else {
+        this.$parts.create(params).then(response => {
+          if (response.code === 200) {
+            this.msgSuccess("新增成功");
+            this.dialogVisible = false;
+            this.search();
+          } else {
+            this.msgError(response.msg);
+          }
+        });
+      }
+    },
+    /** 删除按钮操作 */
+    handleDelete(row) {
+      const userIds = this.ids || [row.userId];
+      this.$confirm("是否确认删除数据项?", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          console.log("delete", userIds);
+          return this.$parts.remove({ ids: userIds });
+        })
+        .then(() => {
+          this.search();
           this.msgSuccess("删除成功");
         })
         .catch(function() {});
+    },
+    /** 导出按钮操作 */
+    handleExport() {
+      const queryParams = this.queryParams;
+
+      this.$confirm("是否确认导出所有用户数据项?", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(function() {
+          return exportUser(queryParams);
+        })
+        .then(response => {
+          this.download(response.msg);
+        })
+        .catch(function() {});
+    },
+    /** 导入按钮操作 */
+    handleImport() {
+      var a = document.createElement("input");
+      a.type = "file";
+      a.accept =
+        "application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      a.onchange = (g, e) => {
+        var file = e.target.files[0];
+        console.log("file", file);
+      };
+      a.click();
+    },
+    select(v) {
+      console.log("select", v);
+      this.handleSelectionChange(v);
+    },
+    change({ category, value }) {
+      if (category === "productId") {
+        this.$lamp.getFields({ productId: value, type: 1 }).then(({ data }) => {
+          this.fields = data;
+          let opts = [...this.options];
+          let list = data.map(x => ({
+            prop: x.productFieldName,
+            label: x.productFieldNameCn
+          }));
+          this.fieldOptions = data.map(x => ({
+            value: x.productFieldName,
+            label: x.productFieldNameCn
+          }));
+          opts.splice(-1, 0, ...list);
+          this.tableOptions = opts;
+          let node = this.formOptions.find(x => x.prop === "dynamic");
+          if (node) node.options = this.fieldOptions;
+          this.search();
+        });
+      }
+    },
+    onListen({ category, value }) {
+      if (["longitude", "latitude"].includes(category)) {
+        console.log(category, "clicked");
+        this.isBaiduMapDialogVisible = true;
+      }
+    },
+    mapping(row, column, index) {
+      let result = "";
+      const property = column.property;
+      if (property === "onlineStatus") {
+        result =
+          row[property] && this.cache.onlineStatus[row[property]]
+            ? this.cache.onlineStatus[row[property]]
+            : row[property] || "-";
+      }
+      if (property === "runningState") {
+        result =
+          row[property] && this.cache.onlineStatus[row[property]]
+            ? this.cache.runningState[row[property]]
+            : row[property] || "-";
+      }
+      if (property === "alertStatus") {
+        result =
+          row[property] && this.cache.alertStatus[row[property]]
+            ? this.cache.alertStatus[row[property]]
+            : row[property] || "-";
+      }
+      return result;
     }
   }
 };
 </script>
-<style lang="scss" scoped>
-// F3F3F4
-.xny-region {
-  height: calc(100vh - 84px);
-  width: 100%;
-  background-color: #f3f3f4;
-}
-.Navigation {
-  margin: 5px 0;
-  height: 40px;
-  line-height: 40px;
-  font-size: 16px;
-  background-color: #fff;
-  .Monitor,
-  .History {
-    cursor: pointer;
-    display: inline-block;
-    padding: 0 15px;
-  }
-  .Monitor {
-    margin-left: 20px;
-  }
-
-  //   1890FF
-}
-// 点击高亮
-.xny_highlight {
-  color: #1890ff;
-  border-bottom: 2px solid #1890ff;
-}
-.region {
-  float: left;
-  width: 210px;
-  min-height: calc(100vh - 84px);
-  background-color: #fff;
-}
-.box-header {
-  width: 100%;
-  height: 42px;
-  padding: 12px 10px 2px 15px;
-  .tabBackground,
-  .tabBackground2 {
-    float: left;
-    font-size: 13px;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    padding-right: 10px;
-    border: 1px solid #e5e5e5;
-    cursor: pointer;
-    padding-left: 10px;
-  }
-}
-.tabBackgrounddefault {
-  background-color: #e5e5e5;
-  border: 1px solid #e5e5e5;
-  color: white;
-  cursor: pointer;
-}
-.regionList {
-  border-top: 1px solid #e5e5e5;
-  margin-top: 15px;
-}
-.head-container {
-  margin-left: 15px;
-  margin-top: 15px;
-}
-.xny-search {
-  float: left;
-  width: calc(100% - 210px);
-}
-.xny-cover,
-.coverForm {
-  margin-left: 15px;
-  margin-right: 20px;
-  margin-top: 10px;
-  padding: 5px 15px 13px 15px;
-  background-color: #fff;
-  border-radius: 8px;
-  font-size: 13px;
-}
-.Manhole {
-  width: 200px;
-  height: 30px;
-}
-.xny-Manhole {
-  margin-top: 10px;
-}
-.coverList {
-  margin-left: 10px;
-}
-.coverSearch {
-  margin-left: 20px;
-}
-// #ed5565
-.edit {
-  margin: 0;
-  padding:0 5px;
-  height: 22px;
-  font-size: 12px;
-}
-
-</style>
-<style >
-.el-input--medium .el-input__inner {
-  height: 30px;
-  line-height: 30px;
-}
-.el-input--small .el-input__inner {
-  height: 30px;
-  line-height: 30px;
-}
-.managementList.el-input--small .el-input__inner {
-  border-right: 0;
-  border-radius: 4px 0 0 4px;
-}
-.managementList.el-input--small .el-input__inner:focus {
-  border: 1px solid #dcdfe6;
-  border-right: 0;
-}
-.el-select > .el-input {
-  width: 200px;
-}
-</style>

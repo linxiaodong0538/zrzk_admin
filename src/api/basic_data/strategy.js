@@ -19,11 +19,26 @@ export  function issuedData(id) {
 
 
 //添加下发控制
-
 export function submitControl(data) {
   return request({
     url: '/simpleControl',
     method: 'POST',
     data
+  })
+}
+
+//查询产品类型
+export function productType() {
+  return request({
+    url: '/device/deviceGroups/listForProductType',
+    method: 'get',
+  })
+}
+
+//查询产品名称下拉选项
+export function productNames() {
+  return request({
+    url: '/simpleControl/ListForProduct',
+    method: 'get',
   })
 }

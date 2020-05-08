@@ -24,7 +24,13 @@
       <br />
       <el-row>
         <el-col :lg="2" :md="2">
-          <el-upload :show-file-list="false" :before-upload="beforeUpload">
+          <!-- action="https://jsonplaceholder.typicode.com/posts/" -->
+          <el-upload
+            :show-file-list="false"
+            :before-upload="beforeUpload"
+            action="https://jsonplaceholder.typicode.com/posts/"
+            :on-change="sda"
+          >
             <el-button size="small">
               上传
               <i class="el-icon-upload el-icon--right"></i>
@@ -55,7 +61,7 @@
 import store from "@/store";
 import { VueCropper } from "vue-cropper";
 import { uploadAvatar } from "@/api/system/user";
-
+import { getToken } from "@/utils/auth";
 export default {
   components: { VueCropper },
   props: {
@@ -76,13 +82,15 @@ export default {
         autoCropHeight: 200, // 默认生成截图框高度
         fixedBox: true // 固定截图框大小 不允许改变
       },
-      previews: {}
+      previews: {},
+    name:""
     };
   },
   methods: {
     // 编辑头像
     editCropper() {
       this.open = true;
+      // alert('msg');
     },
     // 向左旋转
     rotateLeft() {
@@ -97,6 +105,9 @@ export default {
       num = num || 1;
       this.$refs.cropper.changeScale(num);
     },
+    sda(data){
+      this.name = data.name
+    },
     // 上传预处理
     beforeUpload(file) {
       if (file.type.indexOf("image/") == -1) {
@@ -106,14 +117,18 @@ export default {
         reader.readAsDataURL(file);
         reader.onload = () => {
           this.options.img = reader.result;
+          
         };
       }
     },
     // 上传图片
     uploadImg() {
       this.$refs.cropper.getCropBlob(data => {
+        let src = this.name;
+      
         let formData = new FormData();
         formData.append("avatarfile", data);
+        formData.append("name", src);
         uploadAvatar(formData).then(response => {
           if (response.code === 200) {
             this.open = false;

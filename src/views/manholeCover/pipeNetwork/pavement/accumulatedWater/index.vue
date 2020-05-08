@@ -37,14 +37,13 @@
       <div class="xny-cover">
         <div class="xny-Manhole">
           <span class="coverList">所属项目:</span>
-          <el-select v-model="value" placeholder>
+          <el-select v-model="value" placeholder  class="Manhole">
             <el-option
               v-for="item in options"
               :key="item.value"
               :label="item.label"
               :value="item.value"
               size="small"
-              class="Manhole"
             ></el-option>
           </el-select>
           <span class="coverList">设备编号:</span>

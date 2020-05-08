@@ -1,79 +1,129 @@
 <template>
-  <div class="xny-region">
+  <div class="xny-region1">
     <div class="xny-search">
       <!-- v-model="deptName" -->
-      <div class="xny-cover">
-        <div class="xny-Manhole">
-          <p class="information">基础信息</p>
-          <ul>
-            <li>
-              <div>
-                <span class="wisdom">ID：99887766</span>
-                <span class="wisdom">（智慧井盖状态监测终端）</span>
-              </div>
-            </li>
-            <li>
-              <div>
-                <span class="equipment">设备类型：监控类</span>
-                <span class="equipment">型号：ds003</span>
-                <span class="equipment">部件ID：336662</span>
-              </div>
-            </li>
-            <li>
-              <div>
-                <span class="equipment">所在区域：福州市鼓楼区</span>
-                <span class="equipment">项目：井盖项目1期</span>
-                <span class="equipment">机构：机构1</span>
-                <span class="equipment">分组：分组1</span>
-              </div>
-            </li>
-            <li>
-              <div>
-                <span>接入协议：NB-IOT</span>
-              </div>
-            </li>
-            <li>
-              <div>
-                <span class="equipment">IMEI：86803331487511877</span>
-                <span class="equipment">IMSI：454891548717</span>
-              </div>
-            </li>
-            <li>
-              <div>
-                <span>创建时间：2019.01.10 15:30:24</span>
-              </div>
-            </li>
-          </ul>
-        </div>
-        <div class="position">
-          <p class="information">设备位置</p>
-          <div id="allmap"></div>
-        </div>
-      </div>
-      <div class="coverForm">
-        <!-- v-loading="loading" -->
-        <el-table :data="typeList">
-          <el-table-column label="传感器名称" min-width="100" align="center" prop="deviceName" />
-          <el-table-column label="最新数据" align="center" prop="alarmView" />
-          <el-table-column label="更新时间" align="center" prop="region" />
-        </el-table>
-        <!-- @pagination="getList" -->
-        <pagination
-          v-show="total>0"
-          :total="total"
-          :page.sync="queryParams.pageNum"
-          :limit.sync="queryParams.pageSize"
-          @pagination="2"
-        />
-      </div>
+      <el-row type="flex" justify="space-around" :gutter="20">
+        <el-col :span="14">
+          <el-card>
+            <div slot="header" class="clearfix">
+              <span>基础信息</span>
+            </div>
+            <el-row class="infos">
+              <el-col :span="3" style="text-align: center; font-weight: bolder;">编号:</el-col>
+              <el-col :span="21">
+                <span style="font-weight: bolder">{{basicInformation.deviceCode}}</span>
+                <span
+                  style="font-weight: bolder; margin-left: 10px;"
+                >[{{basicInformation.productName}}]</span>
+              </el-col>
+            </el-row>
+
+            <el-row class="infos">
+              <el-col :span="3">在线状态：</el-col>
+              <el-col :span="5">
+                <label v-if="basicInformation.onlineStatus == '1'" style="color: #67C23A">在线</label>
+                <label v-else style="color: #F56C6C">离线</label>
+              </el-col>
+              <el-col :span="3">告警状态：</el-col>
+              <el-col :span="5">
+                {{basicInformation.alertListStr}}
+                <!-- <label
+                                    v-if="basicInformation.onlineStatus == '1'"
+                                    style="color: #67C23A"
+                                >在线</label>
+                <label v-else style="color: #F56C6C">离线</label>-->
+              </el-col>
+              <el-col :span="3">启用状态：</el-col>
+              <el-col :span="5">
+                <label v-if="basicInformation.runningState == '1'" style="color: #67C23A">启用</label>
+                <label v-else style="color: #909399">未启用</label>
+              </el-col>
+            </el-row>
+
+            <el-row class="infos">
+              <el-col :span="3">产品名称：</el-col>
+              <el-col :span="5">{{basicInformation.deviceTypeName || '-'}}</el-col>
+              <el-col :span="3">产品类型：</el-col>
+              <el-col :span="5">{{basicInformation.deviceTypeName || '-'}}</el-col>
+              <el-col :span="3">创建时间：</el-col>
+              <el-col :span="5">{{basicInformation.registerTime || '-'}}</el-col>
+            </el-row>
+            <el-row class="infos">
+              <el-col :span="3">所属项目：</el-col>
+              <el-col :span="5">{{basicInformation.projectName || '-'}}</el-col>
+              <el-col :span="3">所在分组：</el-col>
+              <el-col :span="5">{{basicInformation.groupName || '-'}}</el-col>
+              <el-col :span="3">所在区域：</el-col>
+              <el-col :span="5">{{basicInformation.areaName || '-'}}</el-col>
+            </el-row>
+
+            <el-row class="infos">
+              <el-col :span="3">关联部件：</el-col>
+              <el-col
+                :span="5"
+                :title="basicInformation.partsName"
+              >{{basicInformation.partsCode || '-'}}</el-col>
+              <el-col :span="3">详细地址：</el-col>
+              <el-col :span="13">{{basicInformation.groupName || '-'}}</el-col>
+            </el-row>
+
+            <el-row class="infos">
+              <template v-for="(item, index) in custom">
+                <el-col :span="3">{{item.deviceFieldNameCn}}：</el-col>
+                <el-col :span="5">{{item.deviceFieldValue}}</el-col>
+              </template>
+            </el-row>
+          </el-card>
+        </el-col>
+        <el-col type="flex" :span="10">
+          <!-- <div class="position">
+                        <p class="information">设备位置</p>
+                        <div id="allmap"></div>
+          </div>-->
+          <el-card>
+            <div slot="header" class="clearfix">
+              <span>设备位置</span>
+            </div>
+            <div id="allmap"></div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" style="margin-top: 20px;">
+        <el-col :span="24">
+          <el-card>
+            <div slot="header" class="clearfix">
+              <span>最新数据</span>
+            </div>
+            <!-- v-loading="loading" -->
+            <el-table :data="typeList" v-loading="loading">
+              <el-table-column
+                label="上传数据"
+                min-width="100"
+                align="center"
+                prop="deviceFieldNameCn"
+              />
+              <el-table-column label="最新数据" align="center" prop="deviceFieldValue" />
+              <el-table-column label="更新时间" align="center" prop="uploadDate" />
+            </el-table>
+            <!-- @pagination="getList" -->
+            <pagination
+              v-show="total>0"
+              :total="total"
+              :page.sync="pageNum"
+              :limit.sync="pageSize"
+              @pagination="2"
+            />
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
   </div>
 </template>
 <script>
-//   wellGroup
-import { region, coverForm } from "@/api/system/cover/coverManagement";
+import { queryDevice, sensor } from "@/api/system/cover/coverManagement";
 import { treeselect } from "@/api/system/dept";
 export default {
+  props: ["deviceId"],
   components: {},
   data() {
     return {
@@ -98,47 +148,20 @@ export default {
       // 非多个禁用
       multiple: true,
       // 总条数
-      //   total: 0,
-      total: 10,
+      total: 0,
       // 井盖管理数据
-      typeList: [
-        {
-          deviceName: "剩余电量", //设备名称
-          alarmView: "23%", //在线状态
-          region: "2020.01.19 10:00:03" //设备ID
-        },
-        {
-          deviceName: "剩余电量", //设备名称
-          alarmView: "23%", //在线状态
-          region: "2020.01.19 10:00:03" //设备ID
-        },
-        {
-          deviceName: "剩余电量", //设备名称
-          alarmView: "23%", //在线状态
-          region: "2020.01.19 10:00:03" //设备ID
-        },
-        {
-          deviceName: "剩余电量", //设备名称
-          alarmView: "23%", //在线状态
-          region: "2020.01.19 10:00:03" //设备ID
-        }
-      ],
+      typeList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
       open: false,
       // 状态数据字典
       statusOptions: [],
+      basicInformation: [], //基础信息
+      custom: [], //基础信息自定义
       // 日期范围
       dateRange: [],
-      // 查询参数
-      queryParams: {
-        pageNum: 1,
-        pageSize: 10,
-        dictName: "",
-        dictType: "",
-        status: ""
-      },
+
       //新增区域传参
       management: {
         id: "",
@@ -148,7 +171,15 @@ export default {
       managementGrouping: {
         id: "",
         label: ""
-      }
+      },
+      //分页
+      pageNum: 1,
+      pageSize: 10,
+      productId: "",
+      // 经度
+      latitude: "",
+      // 纬度
+      longitude: ""
     };
   },
 
@@ -157,21 +188,42 @@ export default {
       this.statusOptions = response.data;
     });
     this.allmap();
+    this.product();
   },
   methods: {
     // 引入百度地图
     allmap() {
       // 百度地图API功能
       var map = new BMap.Map("allmap"); // 创建Map实例
-      map.centerAndZoom(new BMap.Point(116.404, 39.915), 11); // 初始化地图,设置中心点坐标和地图级别
+      map.centerAndZoom(new BMap.Point(119.28, 26.08), 13); // 初始化地图,设置中心点坐标和地图级别
       //添加地图类型控件
       map.addControl(
         new BMap.MapTypeControl({
           mapTypes: [BMAP_NORMAL_MAP, BMAP_HYBRID_MAP]
         })
       );
-      map.setCurrentCity("北京"); // 设置地图显示的城市 此项是必须设置的
       map.enableScrollWheelZoom(true); //开启鼠标滚轮缩放
+      var latitude = this.latitude;
+      var longitude = this.longitude;
+      var deviceId = this.deviceId;
+
+      queryDevice(deviceId).then(res => {
+        this.basicInformation = res.data;
+        this.custom = res.data.deviceFields;
+        if (
+          res.data.latitude != null &&
+          res.data.longitude != null &&
+          res.data.longitude != "" &&
+          res.data.latitude !== ""
+        ) {
+          latitude = res.data.latitude; //经度
+          longitude = res.data.longitude; ///纬度
+          var marker = new BMap.Marker(new BMap.Point(longitude, latitude));
+          marker.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+
+          map.addOverlay(marker);
+        }
+      });
     },
     // 筛选节点
     filterNode(value, data) {
@@ -199,28 +251,25 @@ export default {
       //   this.resetForm("queryForm");
       //   this.handleQuery();
     },
-    //表单
-    /** 查询井盖管理 */
-    // getList() {
-    //   //  //井盖编号
-    //   // coverNumber: "",
-    //   // //创建时间
-    //   // creationTime:"",
-    //   let areaId = this.management.id;
-    //   let deviceGroupId = this.managementGrouping.id;
-    //   let coverNumber = this.coverNumber;
-    //   let creationTime = this.creationTime;
-    //   this.loading = true;
 
-    //   coverForm(this.addDateRange(this.queryParams, this.dateRange)).then(
-    //     response => {
-    //       // console.log(response);
-    //       this.typeList = response.rows;
-    //       this.total = response.total;
-    //       this.loading = false;
-    //     }
-    //   );
-    // },
+    //产品id
+    product() {
+      var deviceId = this.deviceId;
+      var pageNum = this.pageNum;
+      var pageSize = this.pageSize;
+      var data = {
+        pageNum,
+        pageSize,
+        deviceId
+      };
+      this.loading = true;
+      sensor(data).then(res => {
+        this.typeList = res.rows;
+        this.total = res.total;
+        this.loading = false;
+        // console.log(this.typeList);
+      });
+    },
     // 字典状态字典翻译
     statusFormat(row, column) {
       return this.selectDictLabel(this.statusOptions, row.status);
@@ -321,7 +370,7 @@ ul {
 .xny-Manhole {
   margin-top: 10px;
   // float: left;
-  width: 47%;
+  width: 100%;
   .information {
     margin: 0;
     padding: 0;
@@ -329,13 +378,13 @@ ul {
     height: 40px;
     line-height: 40px;
     font-weight: 500;
-    font-size: 24px;
+    font-size: 18px;
     border-bottom: 1px solid #ccc;
   }
   ul {
     margin: 0;
     padding: 0;
-    font-size: 18px;
+    font-size: 16px;
     margin-left: 20px;
     li {
       margin-top: 20px;
@@ -350,22 +399,24 @@ ul {
 }
 // 设备位置
 .position {
-  width: 50%;
+  width: 100%;
   .information {
+    height: 100%;
     margin: 0;
     padding: 0;
     margin-left: 20px;
     height: 40px;
     line-height: 40px;
     font-weight: 500;
-    font-size: 24px;
+    font-size: 18px;
     border-bottom: 1px solid #ccc;
   }
 }
 // 引入百度地图
 #allmap {
   width: 100%;
-  height: calc(100% - 40px);
+  height: 100%;
+  min-height: 23vh;
 }
 //设备id样式
 .viewData {
@@ -399,5 +450,14 @@ ul {
 }
 .el-table--enable-row-transition .el-table__body td {
   text-align: center;
+}
+.infos .el-col {
+  font-size: 14px;
+  padding: 10px 6px;
+}
+.infos .el-col:first-child,
+.infos .el-col:nth-child(3),
+.infos .el-col:nth-child(5) {
+  text-align: right;
 }
 </style>

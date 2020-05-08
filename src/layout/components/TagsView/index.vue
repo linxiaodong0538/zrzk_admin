@@ -10,12 +10,12 @@
         tag="span"
         class="tags-view-item"
         @click.middle.native="closeSelectedTag(tag)"
-        @contextmenu.prevent.native="openMenu(tag,$event)"  
+        @contextmenu.prevent.native="openMenu(tag,$event)"
       >
         {{ tag.title }}
         <span v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
       </router-link>
-    </scroll-pane>  
+    </scroll-pane>
     <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
       <li @click="refreshSelectedTag(selectedTag)">刷新页面</li>
       <li v-if="!(selectedTag.meta&&selectedTag.meta.affix)" @click="closeSelectedTag(selectedTag)">关闭当前</li>
@@ -25,9 +25,8 @@
   </div>
 </template>
 
-
 <script>
-import ScrollPane from './ScrollPane' 
+import ScrollPane from './ScrollPane'
 import path from 'path'
 
 export default {
@@ -122,18 +121,16 @@ export default {
         }
       })
     },
-
     refreshSelectedTag(view) {
       this.$store.dispatch('tagsView/delCachedView', view).then(() => {
         const { fullPath } = view
         this.$nextTick(() => {
           this.$router.replace({
-            path: '/redirect' + fullPath   
+            path: '/redirect' + fullPath
           })
         })
       })
     },
-    
     closeSelectedTag(view) {
       this.$store.dispatch('tagsView/delView', view).then(({ visitedViews }) => {
         if (this.isActive(view)) {

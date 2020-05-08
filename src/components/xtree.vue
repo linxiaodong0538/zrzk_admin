@@ -3,7 +3,7 @@
         <div v-if="isFilterable" class="head-container">
             <el-input
                 v-model="q"
-                placeholder="请输入部门名称"
+                placeholder="请输入"
                 clearable
                 size="mini"
                 prefix-icon="el-icon-search"
@@ -87,7 +87,7 @@ export default {
     methods: {
         handleNodeClick(...args) {
             // console.log("trigger cell-click");
-            this.$emit("node-click", args[0]);
+            this.$emit("node-click", { category: "tree", data: args[0] });
         }
     },
     watch: {

@@ -110,7 +110,7 @@ export default {
 
     // 富文本图片上传前
     quillImgBefore(file) {
-      let fileType = file.type
+      let fileType = file.type;
 			if(fileType === 'image/jpeg' || fileType === 'image/png'){
 				return true;
 			}else {

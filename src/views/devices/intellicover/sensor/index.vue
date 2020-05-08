@@ -174,14 +174,10 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
             // 岗位选项
             postOptions: [],
             // 角色选项
@@ -339,19 +335,6 @@ export default {
             // }));
             // this.$forceUpdate();
         });
-        this.getDicts("sys_user_sex").then(response => {
-            this.sexOptions = response.data;
-            let node = this.dialogOptions.find(x => x.prop === "sex");
-            if (node) {
-                node.options = this.sexOptions.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }));
-            }
-        });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
-        });
     },
     methods: {
         /** 查询用户列表 */
@@ -397,7 +380,7 @@ export default {
             return data.label.indexOf(value) !== -1;
         },
         // 节点单击事件
-        handleNodeClick(data) { 
+        handleNodeClick({data}) { 
             this.current.deptId = data.id;
             this.search();
         },
@@ -491,7 +474,6 @@ export default {
             if (t == "open") this.open = true;
             else this.dialogVisible = true;
             this.title = "新增";
-            this.form.password = this.initPassword;
         },
         /** 修改按钮操作 */
         handleUpdate(row) {

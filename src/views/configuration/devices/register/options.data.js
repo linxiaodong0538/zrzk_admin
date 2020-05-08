@@ -72,17 +72,25 @@ export const FormOptions = [
         label: "产品类型",
         type: "select",
         clearable: true,
+        options: [],
+        change: true
+    },
+    {
+        prop: "productId",
+        label: "产品名称",
+        type: "select",
+        clearable: true,
         options: []
     },
     {
-        prop: "deviceId",
-        label: "设备ID",
+        prop: "deviceCode",
+        label: "设备编号",
         type: "text",
         clearable: true
     },
     {
-        prop: "partsId",
-        label: "部件ID",
+        prop: "partsCode",
+        label: "部件编号",
         type: "text",
         clearable: true
     },
@@ -94,7 +102,7 @@ export const FormOptions = [
         options: [{ label: '正常', value: '1' }]
     },
     {
-        prop: "createTime",
+        prop: "dateRange",
         label: "登记时间",
         type: "daterange",
         clearable: true
@@ -106,7 +114,8 @@ export const TableOptions = [
     { prop: "deviceCode", label: "设备编码" },
     { prop: "productName", label: "产品名称" },
     { prop: "productTypeName", label: "产品类型" },
-    { prop: "partsId", label: "部件ID" },
-    { prop: "runningState", label: "运行状态", formatter: () => { } },
-    { prop: "createTime", label: "登记时间" }
+    { prop: "partsCode", label: "所属部件编号" },
+    { prop: "addr", label: "地址" },
+    { prop: "runningState", label: "运行状态", formatter: (row, column) => { } },
+    { prop: "registerTime", label: "登记时间" }
 ];

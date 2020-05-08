@@ -1,136 +1,119 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
-      <el-col :span="4"
-        :xs="24">
+      <el-col :span="4" :xs="24">
         <div class="region">
           <div class="box-header">
-            <div class="tabBackground"
-              :class="{tabBackgrounddefault:fla==0}"
-              @click="region">区域</div>
-            <div class="tabBackground2"
+            <div class="tabBackground" :class="{tabBackgrounddefault:fla==0}" @click="region">区域</div>
+            <div
+              class="tabBackground2"
               :class="{tabBackgrounddefault:fla==1}"
-              @click="coverGroup">分组</div>
+              @click="coverGroup"
+            >分组</div>
           </div>
-          <div v-show="fla == 0"
-            class="regionList">
+          <div v-show="fla == 0" class="regionList">
             <div class="head-container">
-              <el-tree :data="deptOptions"
+              <el-tree
+                :data="deptOptions"
                 :props="defaultProps"
                 :expand-on-click-node="false"
                 :filter-node-method="filterNode"
                 ref="tree"
                 default-expand-all
-                @node-click="handleNodeClick" />
+                @node-click="handleNodeClick"
+              />
             </div>
           </div>
-          <div v-show="fla == 1"
-            class="regionList">
+          <div v-show="fla == 1" class="regionList">
             <div class="head-container">
-              <el-tree :data="deptOptions"
+              <el-tree
+                :data="deptOptions"
                 :props="defaultProps"
                 :expand-on-click-node="false"
                 :filter-node-method="filterNode"
                 ref="tree"
                 default-expand-all
-                @node-click="handleNodeClick1" />
+                @node-click="handleNodeClick1"
+              />
             </div>
           </div>
         </div>
       </el-col>
 
-      <el-col :span="20"
-        :xs="24">
-        <x-form :options="formOptions"
-          :form="formData"
-          labelWidth="100px"
-          @callback="search">
-        </x-form>
+      <el-col :span="20" :xs="24">
+        <x-form :options="formOptions" :form="formData" labelWidth="100px" @callback="search"></x-form>
         <div class="coverForm">
-          <el-row :gutter="10"
-            class="mb8">
+          <el-row :gutter="10" class="mb8">
             <el-col :span="4">
-              <el-button type="primary"
-                size="mini"
-                @click="handleIssuedControl">下发控制</el-button>
-              <el-button type="primary"
-                size="mini"
-                @click="handleSelectAll">全选</el-button>
+              <el-button type="primary" size="mini" @click="handleIssuedControl">下发控制</el-button>
+              <el-button type="primary" size="mini" @click="handleSelectAll">全选</el-button>
             </el-col>
             <span>已选择{{ids.length}}台设备</span>
           </el-row>
 
-          <x-table ref="multipleTable"
+          <x-table
+            ref="multipleTable"
             :options="tableheader"
             :data="models"
             :pagination="pagination"
             :isSelectable="true"
             :isPaging="true"
             @page-change="search"
-            @selection-change="handleSelectionChange">
-            <el-table-column label="操作"
-              min-width="100">
+            @selection-change="handleSelectionChange"
+          >
+            <el-table-column label="操作" min-width="100">
               <template slot-scope="scope">
-                <span class="viewData"
-                  @click="handleCurRowControl(scope.row)">下发控制</span>
+                <el-button
+                  class="viewData"
+                  size="mini"
+                  type="text"
+                  @click="handleCurRowControl(scope.row)"
+                >下发控制</el-button>
               </template>
             </el-table-column>
           </x-table>
 
-          <el-dialog title="下发控制"
-            :visible.sync="dialogTableVisible"
-            top="10vh">
+          <el-dialog title="下发控制" :visible.sync="dialogTableVisible" top="10vh">
             <el-row>
               <span>产品名称:</span>
-              <el-select v-model="value2"
-                placeholder
-                disabled
-                style="width:26vh">
-                <el-option v-for="item in options"
+              <el-select v-model="value2" placeholder disabled style="width:26vh">
+                <el-option
+                  v-for="item in options"
                   :key="item.value"
                   :label="item.label"
-                  :value="item.value"></el-option>
+                  :value="item.value"
+                ></el-option>
               </el-select>
               <span class="offset">已选择{{ids.length}}台设备</span>
             </el-row>
             <el-row class="table-wrap">
               <p class="title">下发参数</p>
 
-              <el-table :data="issuedData"
+              <el-table
+                ref="dialogTable"
+                :data="issuedData"
                 border
-                class="teble"
-                @selection-change="handleIssuedSelect">
-                <el-table-column type="selection"
-                  width="55"
-                  align="center" />
-                <el-table-column prop="deviceFieldNameCn"
-                  label="数据名称"
-                  span="12"></el-table-column>
-                <el-table-column prop="dataValue"
-                  label="数据值"
-                  span="12">
+                class="table"
+                @selection-change="handleIssuedSelect"
+              >
+                <el-table-column type="selection" width="55" align="center" />
+                <el-table-column prop="deviceFieldNameCn" label="数据名称" span="12"></el-table-column>
+                <el-table-column prop="dataValue" label="数据值" span="12">
                   <template slot-scope="scope">
-                    <input type="text"
-                      class="input"
-                      v-model="scope.row.deviceFieldValue" />
-                    <el-button size="mini"
-                      @click="handleDefaultValue(scope)">填入默认值</el-button>
+                    <el-input type="text" class="input" size="small " v-model="scope.row.deviceFieldValue" />
+                    <el-button size="mini" class="btn" @click="handleDefaultValue(scope)">填入默认值</el-button>
                   </template>
                 </el-table-column>
               </el-table>
             </el-row>
-            <div slot="footer"
-              class="dialog-footer">
+            <div slot="footer" class="dialog-footer">
               <el-button @click="dialogTableVisible = false">取 消</el-button>
-              <el-button type="primary"
-                @click="handleSubmit">确 定</el-button>
+              <el-button type="primary" @click="handleSubmit">确 定</el-button>
             </div>
           </el-dialog>
         </div>
       </el-col>
-
     </el-row>
-
   </div>
 </template>
 <script>
@@ -141,7 +124,13 @@ import {
   wellGroup,
   items
 } from "@/api/system/cover/coverManagement";
-import { list, issuedData, submitControl } from "@/api/basic_data/strategy";
+import {
+  list,
+  issuedData,
+  submitControl,
+  productType,
+  productNames
+} from "@/api/basic_data/strategy";
 import { XTable, XForm } from "@/components";
 import { treeselect } from "@/api/system/dept";
 import { isRepeatKey } from "@/utils";
@@ -156,7 +145,7 @@ export default {
       formOptions: [
         {
           prop: "projectId",
-          label: "项目",
+          label: "所属项目",
           type: "select",
           clearable: true,
           options: []
@@ -169,28 +158,27 @@ export default {
           options: []
         },
         {
-          prop: "projectId",
-          label: "项目",
+          prop: "productId",
+          label: "产品名称",
           type: "select",
           clearable: true,
           options: []
         },
         {
-          prop: "productTypeId",
-          label: "产品类型",
-          type: "select",
+          prop: "deviceCode",
+          label: "设备编号",
+          type: "text",
           clearable: true,
           options: []
         }
       ],
 
       tableheader: [
-        { prop: "deviceId", label: "设备编码" },
+        { prop: "deviceCode", label: "设备编码" },
         { prop: "productName", label: "产品名称" },
-        { prop: "productType", label: "产品类型" },
-        { prop: "partsId", label: "部件编号" },
-        { prop: "deviceName", label: "名称" },
-        { prop: "onlineStatus", label: "在线状态" }
+        { prop: "productTypeName", label: "产品类型" },
+        { prop: "partsCode", label: "部件编号" },
+        { prop: "onlineStatus", label: "在线状态", formatter: this.mapping }
       ],
       formData: {},
       models: [],
@@ -237,6 +225,14 @@ export default {
       open: false,
       // 状态数据字典
       statusOptions: [],
+      current: {
+        deptId: undefined,
+        groupId: undefined
+      },
+      cache: {
+        onlineStatus: {},
+        runningState: {}
+      },
       // 日期范围
       dateRange: [],
       // 查询参数
@@ -260,10 +256,28 @@ export default {
     };
   },
   created() {
-    this.formOptions[0].options = (this.$store.state.app.projects || []).map(x => ({
-      label: x.projectName,
-      value: x.projectId
-    }));
+    this.formOptions[0].options = (this.$store.state.app.projects || []).map(
+      x => ({
+        label: x.projectName,
+        value: x.projectId
+      })
+    );
+
+    this.getDicts("online_status").then(({ data }) => {
+      this.cache.onlineStatus = data.reduce(
+        (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+        {}
+      );
+    });
+    this.getDicts("running_state").then(({ data }) => {
+      this.cache.runningState = data.reduce(
+        (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+        {}
+      );
+    });
+
+    this.getProductType();
+    this.getProductNames();
   },
   mounted() {
     //区域
@@ -274,18 +288,35 @@ export default {
   },
 
   methods: {
+    //查询产品类型
+    async getProductType() {
+      let res = await productType();
+      this.formOptions[1].options = res.data.map(x => ({
+        label: x.productTypeName,
+        value: x.productTypeId
+      }));
+    },
+
+    //查询产品名称
+    async getProductNames() {
+      let res = await productNames();
+      this.formOptions[2].options = res.data.map(x => ({
+        label: x.productName,
+        value: x.productId
+      }));
+    },
     /** 查询列表 */
     search() {
-      let params = Object.assign(
-        {},
-        {
-          pageNum: this.pagination.index,
-          pageSize: this.pagination.size,
-          page: this.pagination.index
-        }
-      );
+      let params = Object.assign({}, this.formData, {
+        pageNum: this.pagination.index,
+        pageSize: this.pagination.size,
+        page: this.pagination.index,
+        areaId: this.current.areaId,
+        groupId: this.current.groupId
+      });
       this.loading = true;
       list(params).then(({ rows, total }) => {
+        // console.log(rows);
         this.loading = false;
         this.models = rows;
         this.pagination.all = total;
@@ -307,16 +338,23 @@ export default {
       }
 
       this.dialogTableVisible = true;
+
       this.value2 = this.arrSelection[0].productName;
 
       let res = await issuedData(this.arrSelection[0].productId);
       this.issuedData = res.data;
       this.issuedData2 = JSON.parse(JSON.stringify(res.data));
+
+      this.$nextTick(() => {
+        this.issuedData.forEach(item => {
+          this.$refs.dialogTable.toggleRowSelection(item, true);
+        });
+      });
     },
 
     //全选
     handleSelectAll() {
-      this.$refs.multipleTable.handleSelectAll();
+      this.$refs.multipleTable.toggleAllSelection();
     },
     /** 区域 */
     getTreeselect() {
@@ -357,16 +395,12 @@ export default {
     },
     // 节点单击事件
     handleNodeClick(data) {
-      this.queryParams.deptId = data.id;
-      this.management.id = data.id;
-      this.management.label = data.label;
-      //   this.getList();
+      this.current.areaId = data.id;
+      (this.current.groupId = ""), this.search();
     },
     handleNodeClick1(data) {
-      this.queryParams.deptId = data.id;
-      this.managementGrouping.id = data.id;
-      this.managementGrouping.label = data.label;
-      //   this.getList();
+      (this.current.areaId = ""), (this.current.groupId = data.id);
+      this.search();
     },
 
     /** 重置按钮操作 */
@@ -432,12 +466,17 @@ export default {
 
     //当前行下发控制
     async handleCurRowControl(row) {
-      this.$refs.multipleTable.toggleRowSelection(row);
+      this.$refs.multipleTable.toggleRowSelection(row, true);
       this.dialogTableVisible = true;
       this.value2 = row.productName;
       const res = await issuedData(row.productId);
       this.issuedData = res.data;
       this.issuedData2 = JSON.parse(JSON.stringify(res.data));
+      this.$nextTick(() => {
+        this.issuedData.forEach(item => {
+          this.$refs.dialogTable.toggleRowSelection(item, true);
+        });
+      });
     },
 
     //提交
@@ -451,9 +490,13 @@ export default {
         return item.deviceId;
       });
 
+
+    
+
       const data = {
         deviceFieldIssueds: this.arrIssuedSelect,
-        deviceIds
+        deviceIds,
+        productId:this.arrSelection[0].productId
       };
       let res = await submitControl(data);
       if (res.code == 200) {
@@ -464,6 +507,23 @@ export default {
         this.$refs.multipleTable.clearSelection();
         this.dialogTableVisible = false;
       }
+    },
+    mapping(row, column, index) {
+      let result = "";
+      const property = column.property;
+      if (property === "onlineStatus") {
+        result =
+          row[property] && this.cache.onlineStatus[row[property]]
+            ? this.cache.onlineStatus[row[property]]
+            : row[property] || "-";
+      }
+      if (property === "runningState") {
+        result =
+          row[property] && this.cache.onlineStatus[row[property]]
+            ? this.cache.runningState[row[property]]
+            : row[property] || "-";
+      }
+      return result;
     }
   }
 };
@@ -516,7 +576,16 @@ export default {
   .title {
     margin-bottom: 10px;
   }
+  .table {
+    .input {
+      width: 50%;
+    }
+    .btn{
+      margin-left: 10px;
+    }
+  }
 }
+
 .offset {
   padding-left: 10px;
 }

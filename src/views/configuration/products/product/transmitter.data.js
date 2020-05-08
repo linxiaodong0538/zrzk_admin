@@ -1,6 +1,12 @@
 export const DialogOptions = [
     {
         prop: "productFieldName",
+        label: "数据标识",
+        type: "text",
+        span: 24
+    },
+    {
+        prop: "productFieldNameCn",
         label: "数据名称",
         type: "text",
         span: 24

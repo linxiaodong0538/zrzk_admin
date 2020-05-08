@@ -7,14 +7,13 @@
           <span class="coverList">操作时间:</span>
             <el-input placeholder size="small" class="Manhole" v-model="gatewayName" />
           <span class="coverList">操作员:</span>
-          <el-select v-model="value" placeholder>
+          <el-select v-model="value" placeholder  class="Manhole">
             <el-option
               v-for="item in options"
               :key="item.value"
               :label="item.label"
               :value="item.value"
               size="small"
-              class="Manhole"
             ></el-option>
           </el-select>
           <!-- @click="handleQuery" -->

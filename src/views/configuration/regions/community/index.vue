@@ -8,6 +8,7 @@
                     :filter-node-method="filterNode"
                     :isFilterable="true"
                     @node-click="handleNodeClick"
+                    :default-expand-all="true"
                 ></x-tree>
             </el-col>
             <!--用户数据-->
@@ -26,46 +27,51 @@
                             type="primary"
                             icon="el-icon-plus"
                             size="mini"
+                            plain
                             @click="handleAdd"
-                            v-hasPermi="['system:user:add']"
+                            v-hasPermi="['configuration:community:add']"
                         >新增</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="success"
+                            type="primary"
                             icon="el-icon-edit"
                             size="mini"
+                            plain
                             :disabled="single"
                             @click="handleUpdate"
-                            v-hasPermi="['system:user:edit']"
+                            v-hasPermi="['configuration:community:edit']"
                         >修改</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="danger"
+                            type="primary"
                             icon="el-icon-delete"
                             size="mini"
+                            plain
                             :disabled="multiple"
                             @click="handleDelete"
-                            v-hasPermi="['system:user:remove']"
+                            v-hasPermi="['configuration:community:remove']"
                         >删除</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="info"
+                            type="primary"
                             icon="el-icon-upload2"
                             size="mini"
+                            plain
                             @click="handleImport"
-                            v-hasPermi="['system:user:import']"
+                            v-hasPermi="['configuration:community:import']"
                         >导入</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="warning"
+                            type="primary"
                             icon="el-icon-download"
                             size="mini"
+                            plain
                             @click="handleExport"
-                            v-hasPermi="['system:user:export']"
+                            v-hasPermi="['configuration:community:export']"
                         >导出</el-button>
                     </el-col>
                 </el-row>
@@ -100,14 +106,14 @@
                                 type="text"
                                 icon="el-icon-edit"
                                 @click="handleUpdate(scope.row)"
-                                v-hasPermi="['system:user:edit']"
+                                v-hasPermi="['configuration:community:edit']"
                             >修改</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-delete"
                                 @click="handleDelete(scope.row)"
-                                v-hasPermi="['system:user:remove']"
+                                v-hasPermi="['configuration:community:remove']"
                             >删除</el-button>
                         </template>
                     </el-table-column>
@@ -182,22 +188,23 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
             // 岗位选项
             postOptions: [],
             // 角色选项
             roleOptions: [],
+            /** 服务提供商 */
+            vendorOptions: [],
             /** 区域字典 */
             areaOptions: [],
             current: {
                 deptId: undefined
+            },
+            cache: {
+                vendors: {}
             },
             // 表单参数
             form: {},
@@ -241,7 +248,29 @@ export default {
                 remark: ""
             },
             dialogOptions: DialogOptions,
-            dialogRules: {},
+            dialogRules: {
+                communityCode: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    }
+                ],
+                communityName: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    }
+                ],
+                areaId: [
+                    {
+                        required: true,
+                        message: "必选",
+                        trigger: "blur"
+                    }
+                ]
+            },
             dialogVisible: false,
             /** dialog $ */
             // 表单校验
@@ -328,18 +357,21 @@ export default {
             // }));
             // this.$forceUpdate();
         });
-        this.getDicts("sys_user_sex").then(response => {
-            this.sexOptions = response.data;
-            let node = this.dialogOptions.find(x => x.prop === "sex");
+        this.getDicts("service_provider").then(response => {
+            this.vendorOptions = response.data.map(x => ({
+                label: x.dictLabel,
+                value: x.dictValue
+            }));
+            this.cache.vendors = response.data.reduce(
+                (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+                {}
+            );
+            let node = this.dialogOptions.find(
+                x => x.prop === "serviceProvider"
+            );
             if (node) {
-                node.options = this.sexOptions.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }));
+                node.options = this.vendorOptions;
             }
-        });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
         });
     },
     methods: {
@@ -366,6 +398,10 @@ export default {
                 this.loading = false;
                 this.models = rows;
                 this.pagination.all = total;
+            },err=>{
+                this.loading = false;
+                this.models = [];
+                this.pagination.all = 0;
             });
         },
         /** 查询部门下拉树结构 */
@@ -385,7 +421,7 @@ export default {
             return data.label.indexOf(value) !== -1;
         },
         // 节点单击事件
-        handleNodeClick(data) {
+        handleNodeClick({ data }) {
             this.current.areaId = data.id;
             this.search();
         },
@@ -483,7 +519,9 @@ export default {
         /** 修改按钮操作 */
         handleUpdate(row) {
             // this.reset();
-            this.dialogForm = row;
+            const id = row && row.communityId ? row.communityId : this.ids[0];
+            const node = this.models.find(x => x.communityId == id);
+            this.dialogForm = Object.assign({}, node);
             this.title = "修改小区";
             this.dialogVisible = true;
 
@@ -523,10 +561,9 @@ export default {
         },
         /** 删除按钮操作 */
         handleDelete(row) {
-            console.log(row);
-            const ids = this.ids || [row.communityId];
+            const ids = row && row.communityId ? [row.communityId] : this.ids;
             this.$confirm(
-                '是否确认删除小区编号为"' + ids + '"的数据项?',
+                '是否确认删除数据项?',
                 "警告",
                 {
                     confirmButtonText: "确定",
@@ -560,7 +597,7 @@ export default {
                 startDate: start,
                 endDate: end
             });
-            delete params.dateRange; 
+            delete params.dateRange;
             this.$confirm("是否确认导出所有数据项?", "警告", {
                 confirmButtonText: "确定",
                 cancelButtonText: "取消",
@@ -595,17 +632,10 @@ export default {
             let property = column.property;
             if (!property) return "";
             if (property === "serviceProvider") {
-                switch (row[property]) {
-                    case "1":
-                        result = "移动";
-                        break;
-                    case "2":
-                        result = "联通";
-                        break;
-                    case "3":
-                        result = "电信";
-                        break;
-                }
+                result =
+                    row[property] && this.cache.vendors[row[property]]
+                        ? this.cache.vendors[row[property]]
+                        : row[property] || "-";
             }
             // console.log(a, column, propery, c);
             return result;

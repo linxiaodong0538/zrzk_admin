@@ -26,46 +26,51 @@
                             type="primary"
                             icon="el-icon-plus"
                             size="mini"
+                            plain
                             @click="handleAdd"
-                            v-hasPermi="['system:user:add']"
+                            v-hasPermi="['configuration:product:add']"
                         >新增</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="success"
+                            type="primary"
                             icon="el-icon-edit"
                             size="mini"
+                            plain
                             :disabled="single"
                             @click="handleUpdate"
-                            v-hasPermi="['system:user:edit']"
+                            v-hasPermi="['configuration:product:edit']"
                         >修改</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="danger"
+                            type="primary"
                             icon="el-icon-delete"
                             size="mini"
+                            plain
                             :disabled="multiple"
                             @click="handleDelete"
-                            v-hasPermi="['system:user:remove']"
+                            v-hasPermi="['configuration:product:remove']"
                         >删除</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="info"
+                            type="primary"
                             icon="el-icon-upload2"
                             size="mini"
+                            plain
                             @click="handleImport"
-                            v-hasPermi="['system:user:import']"
+                            v-hasPermi="['configuration:product:import']"
                         >导入</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="warning"
+                            type="primary"
                             icon="el-icon-download"
                             size="mini"
+                            plain
                             @click="handleExport"
-                            v-hasPermi="['system:user:export']"
+                            v-hasPermi="['configuration:product:export']"
                         >导出</el-button>
                     </el-col>
                 </el-row>
@@ -93,42 +98,42 @@
                                 type="text"
                                 icon="el-icon-edit"
                                 @click="handleCollect(scope.row)"
-                                v-hasPermi="['configuration:region:edit']"
+                                v-hasPermi="['configuration:product:collect']"
                             >上传数据</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-edit"
                                 @click="handleTransmit(scope.row)"
-                                v-hasPermi="['configuration:region:edit']"
+                                v-hasPermi="['configuration:product:transmit']"
                             >下发数据</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-edit"
                                 @click="seek({ category: 'parameters', data: scope.row})"
-                                v-hasPermi="['configuration:region:edit']"
+                                v-hasPermi="['configuration:product:parameter']"
                             >设备参数</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-edit"
                                 @click="handleUpdate(scope.row)"
-                                v-hasPermi="['configuration:region:edit']"
+                                v-hasPermi="['configuration:product:edit']"
                             >修改</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-delete"
                                 @click="handleDelete(scope.row)"
-                                v-hasPermi="['configuration:region:remove']"
+                                v-hasPermi="['configuration:product:remove']"
                             >删除</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-copy"
                                 @click="handleCopy(scope.row)"
-                                v-hasPermi="['configuration:region:remove']"
+                                v-hasPermi="['configuration:product:copy']"
                             >复制</el-button>
                         </template>
                     </el-table-column>
@@ -162,7 +167,10 @@
             width="70%"
             :close-on-click-modal="false"
         >
-            <Parameter :firmware="current.firmware"></Parameter>
+            <Parameter :firmware="firmware"></Parameter>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="isParameterVisible=false" size="small">关 闭</el-button>
+            </div>
         </el-dialog>
         <el-dialog
             :visible.sync="isFirmwareCollectorVisible"
@@ -170,7 +178,10 @@
             width="70%"
             :close-on-click-modal="false"
         >
-            <Collector :firmware="current.firmware"></Collector>
+            <Collector :firmware="firmware"></Collector>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="isFirmwareCollectorVisible=false" size="small">关 闭</el-button>
+            </div>
         </el-dialog>
         <el-dialog
             :visible.sync="isFirmwareTransmitterVisible"
@@ -178,7 +189,41 @@
             width="70%"
             :close-on-click-modal="false"
         >
-            <Transmitter :firmware="current.firmware"></Transmitter>
+            <Transmitter :firmware="firmware"></Transmitter>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="isFirmwareTransmitterVisible=false" size="small">关 闭</el-button>
+            </div>
+        </el-dialog>
+        <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px">
+            <el-upload
+                ref="upload"
+                :limit="1"
+                accept=".xlsx, .xls"
+                :headers="upload.headers"
+                :action="upload.url + '?updateSupport=' + upload.updateSupport"
+                :disabled="upload.isUploading"
+                :on-progress="handleFileUploadProgress"
+                :on-success="handleFileSuccess"
+                :auto-upload="false"
+                drag
+            >
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">
+                    将文件拖到此处，或
+                    <em>点击上传</em>
+                </div>
+                <div class="el-upload__tip" slot="tip">
+                    <!-- <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的用户数据 -->
+                </div>
+                <div class="el-upload__tip" style="color:red" slot="tip">
+                    提示：仅允许导入“xls”或“xlsx”格式文件！
+                    <el-link type="info" style="font-size:12px" @click="importTemplate">下载模板</el-link>
+                </div>
+            </el-upload>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="submitFileForm">确 定</el-button>
+                <el-button @click="upload.open = false">取 消</el-button>
+            </div>
         </el-dialog>
     </div>
 </template>
@@ -205,7 +250,9 @@ import { DialogOptions, FormOptions } from "./options.data";
 import { default as Parameter } from "./firmware.parameter.vue";
 import { default as Collector } from "./firmware.collector.vue";
 import { default as Transmitter } from "./firmware.transmitter.vue";
-
+// 导入导出
+import { productImportTemplate } from "@/api/homePage/parts";
+import { getToken } from "@/utils/auth";
 export default {
     components: {
         Treeselect,
@@ -239,26 +286,29 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
             /** 产品类型 */
             productTypes: [],
             /** 产品列表 */
             products: [],
             // 岗位选项
             postOptions: [],
+            /** 产品协议 */
+            protocolOptions: [],
+            /** 协议平台 */
+            protocolPlatformOptions: [],
             // 角色选项
             roleOptions: [],
             current: {
-                deptId: undefined,
-                firmware: undefined
+                deptId: undefined
             },
+            cache: {
+                protocol: {}
+            },
+            firmware: undefined,
             // 表单参数
             form: {},
             defaultProps: {
@@ -279,7 +329,11 @@ export default {
                 { prop: "productName", label: "产品名称" },
                 { prop: "productTypeName", label: "产品类型" },
                 { prop: "manufacturer", label: "生产厂商" },
-                { prop: "accessProtocol", label: "接入协议" },
+                {
+                    prop: "accessProtocol",
+                    label: "接入协议",
+                    formatter: this.mapping
+                },
                 { prop: "agreementVersionNo", label: "协议版本" },
                 { prop: "createTime", label: "创建日期" }
             ],
@@ -289,14 +343,95 @@ export default {
             dialogForm: {},
             dialogOptions: DialogOptions,
             dialogRules: {
+                extProductId: [
+                    { required: true, message: "必填", trigger: "blur" }
+                ],
+                productId: [
+                    { required: true, message: "必填", trigger: "blur" }
+                ],
                 productTypeId: [
-                    { required: true, message: "必选", trigger: "blur" }
+                    { required: true, message: "必选", trigger: "change" }
                 ],
                 productName: [
-                    { required: true, message: "必填", trigger: "blur" }
+                    { required: true, message: "必填", trigger: "blur" },
+                    {
+                        validator: async (
+                            rule,
+                            value,
+                            callback,
+                            source,
+                            options
+                        ) => {
+                            const field = rule.field;
+                            if (!field) return callback();
+                            if (
+                                value == "" ||
+                                value == undefined ||
+                                value == null
+                            ) {
+                                callback();
+                            } else {
+                                const params = {
+                                    id: this.dialogForm.productId,
+                                    name: value
+                                };
+                                const { data } = await this.$product.validate(
+                                    params
+                                );
+                                callback(
+                                    data
+                                        ? new Error("产品名称已被使用")
+                                        : undefined
+                                );
+                            }
+                        },
+                        trigger: "blur"
+                    }
                 ],
                 productCode: [
-                    { required: true, message: "必填", trigger: "blur" }
+                    { required: true, message: "必填", trigger: "blur" },
+                    {
+                        validator: async (
+                            rule,
+                            value,
+                            callback,
+                            source,
+                            options
+                        ) => {
+                            const field = rule.field;
+                            if (!field) return callback();
+                            if (
+                                value == "" ||
+                                value == undefined ||
+                                value == null
+                            ) {
+                                callback();
+                            } else {
+                                const params = {
+                                    id: this.dialogForm.productId,
+                                    code: value
+                                };
+                                const { data } = await this.$product.validate(
+                                    params
+                                );
+                                callback(
+                                    data
+                                        ? new Error("产品编号已被使用")
+                                        : undefined
+                                );
+                            }
+                        },
+                        trigger: "blur"
+                    }
+                ],
+                accessProtocol: [
+                    { required: true, message: "必选", trigger: "change" }
+                ],
+                protocolPlatform: [
+                    { required: true, message: "必选", trigger: "change" }
+                ],
+                offlineTime: [
+                    { pattern: /^\d+$/, message: "必须为整数", trigger: "blur" }
                 ]
             },
             dialogVisible: false,
@@ -352,8 +487,24 @@ export default {
             isParameterVisible: false,
             isFirmwareCollectorVisible: false,
             isFirmwareTransmitterVisible: false,
-            isCopyDialogVisible: false
+            isCopyDialogVisible: false,
             /** view detail $ */
+            // 用户导入参数
+            upload: {
+                // 是否显示弹出层（用户导入）
+                open: false,
+                // 弹出层标题（用户导入）
+                title: "",
+                // 是否禁用上传
+                isUploading: false,
+                // 是否更新已经存在的用户数据
+                updateSupport: 0,
+                // 设置上传的请求头部
+                headers: { Authorization: "Bearer " + getToken() },
+                // 上传的地址
+                // /deviceSensor/importData
+                url: process.env.VUE_APP_BASE_API + "/deviceSensor/importData"
+            }
         };
     },
     watch: {
@@ -363,13 +514,6 @@ export default {
         }
     },
     created() {
-        console.log(
-            this.formOptions
-                .map(x => {
-                    return `${x.prop}: ''`;
-                })
-                .join(",")
-        );
         this.search();
         this.getTreeData();
         this.getDicts("sys_normal_disable").then(({ data }) => {
@@ -389,21 +533,40 @@ export default {
             // }));
             // this.$forceUpdate();
         });
-        this.getDicts("sys_user_sex").then(response => {
-            this.sexOptions = response.data;
-            let node = this.dialogOptions.find(x => x.prop === "sex");
+        this.getDicts("protocol").then(({ data }) => {
+            this.cache.protocol = data.reduce(
+                (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+                {}
+            );
+            this.protocolOptions = data.map(x => ({
+                label: x.dictLabel,
+                value: x.dictValue
+            }));
+            let node = this.dialogOptions.find(
+                x => x.prop === "accessProtocol"
+            );
             if (node) {
-                node.options = this.sexOptions.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }));
+                node.options = this.protocolOptions;
             }
         });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
+        this.getDicts("protocol_platform").then(({ data }) => {
+            this.cache.protocolPlatform = data.reduce(
+                (p, c) => ((p[c.dictValue] = c.dictLabel), p),
+                {}
+            );
+            this.protocolPlatformOptions = data.map(x => ({
+                label: x.dictLabel,
+                value: x.dictValue
+            }));
+            let node = this.dialogOptions.find(
+                x => x.prop === "protocolPlatform"
+            );
+            if (node) {
+                node.options = this.protocolPlatformOptions;
+            }
         });
-        this.$producttype.getTypeList().then(({ data }) => {
-            this.productTypes = data.map(x => ({
+        this.$producttype.get().then(({ rows }) => {
+            this.productTypes = rows.map(x => ({
                 label: x.productTypeName,
                 value: x.productTypeId
             }));
@@ -414,13 +577,14 @@ export default {
     methods: {
         /** 查询用户列表 */
         search() {
-            console.log("trigger search", this.formData);
-            let start = this.formData.dateRange
-                ? moment(this.formData.dateRange[0]).format("YYYY-MM-DD")
-                : undefined;
-            let end = this.formData.dateRange
-                ? moment(this.formData.dateRange[1]).format("YYYY-MM-DD")
-                : undefined;
+            let start =
+                this.formData.dateRange && this.formData.dateRange[0]
+                    ? moment(this.formData.dateRange[0]).format("YYYY-MM-DD")
+                    : undefined;
+            let end =
+                this.formData.dateRange && this.formData.dateRange[1]
+                    ? moment(this.formData.dateRange[1]).format("YYYY-MM-DD")
+                    : undefined;
             let params = Object.assign({}, this.formData, {
                 pageNum: this.pagination.index,
                 pageSize: this.pagination.size,
@@ -532,21 +696,20 @@ export default {
         /** 设备参数按钮操作 */
         seek({ category, data }) {
             if (category === "parameters") {
-                console.log();
                 this.isParameterVisible = true;
                 this.current.node = data;
-                this.current.firmware = data;
+                this.firmware = data;
             }
         },
         /** 数据上传 */
         handleCollect(meter) {
             this.isFirmwareCollectorVisible = true;
-            this.current.firmware = meter;
+            this.firmware = meter;
         },
         /** 数据下发 */
         handleTransmit(meter) {
             this.isFirmwareTransmitterVisible = true;
-            this.current.firmware = meter;
+            this.firmware = meter;
         },
         /** 新增按钮操作 */
         handleAdd(node) {
@@ -557,7 +720,8 @@ export default {
         /** 修改按钮操作 */
         handleUpdate(row) {
             let id = row && row.productId ? row.productId : this.ids[0];
-            this.dialogForm = this.models.find(x => x.productId == id);
+            const node = this.models.find(x => x.productId == id);
+            this.dialogForm = Object.assign({}, node);
             this.dialogVisible = true;
             this.title = "修改";
         },
@@ -568,8 +732,7 @@ export default {
         },
         /** 提交按钮 */
         submitForm() {
-            console.log("submit", this.dialogForm);
-            if (this.dialogForm.productId != undefined) {
+            if (this.title == "修改") {
                 this.$product.update(this.dialogForm).then(response => {
                     if (response.code === 200) {
                         this.msgSuccess("修改成功");
@@ -592,7 +755,6 @@ export default {
             }
         },
         copyForm() {
-            console.log("submit", this.dialogForm);
             this.$product.create(this.dialogForm).then(response => {
                 if (response.code === 200) {
                     this.msgSuccess("复制成功");
@@ -612,7 +774,6 @@ export default {
                 type: "warning"
             })
                 .then(() => {
-                    console.log("delete", ids);
                     return this.$product.remove({ ids: ids });
                 })
                 .then(() => {
@@ -630,15 +791,15 @@ export default {
                 ? moment(this.formData.dateRange[1]).format("YYYY-MM-DD")
                 : undefined;
             let params = Object.assign({}, this.formData, {
-                pageNum: this.pagination.index,
-                pageSize: this.pagination.size,
-                page: this.pagination.index,
+                // pageNum: this.pagination.index,
+                // pageSize: this.pagination.size,
+                // page: this.pagination.index,
                 startDate: start,
                 endDate: end
             });
             delete params.dateRange;
             console.log("exprot", params);
-            this.$confirm("是否确认导出所有数据项?", "警告", {
+            this.$confirm("是否确认导出所有产品列表数据项?", "警告", {
                 confirmButtonText: "确定",
                 cancelButtonText: "取消",
                 type: "warning"
@@ -655,19 +816,46 @@ export default {
         },
         /** 导入按钮操作 */
         handleImport() {
-            var a = document.createElement("input");
-            a.type = "file";
-            a.accept =
-                "application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-            a.onchange = (g, e) => {
-                var file = e.target.files[0];
-                console.log("file", file);
-            };
-            a.click();
+            this.upload.title = "产品导入";
+            this.upload.open = true;
+        },
+        /** 下载模板操作 */
+        importTemplate() {
+            productImportTemplate().then(response => {
+                this.download(response.msg);
+            });
+        },
+        // 文件上传中处理
+        handleFileUploadProgress(event, file, fileList) {
+            this.upload.isUploading = true;
+        },
+        // 文件上传成功处理
+        handleFileSuccess(response, file, fileList) {
+            this.upload.open = false;
+            this.upload.isUploading = false;
+            this.$refs.upload.clearFiles();
+            this.$alert(response.msg, "导入结果", {
+                dangerouslyUseHTMLString: true
+            });
+            this.search();
+        },
+        // 提交上传文件
+        submitFileForm() {
+            this.$refs.upload.submit();
         },
         select(v) {
-            console.log("select", v);
             this.handleSelectionChange(v);
+        },
+        mapping(row, column, index) {
+            let result = "";
+            const property = column.property;
+            if (property === "accessProtocol") {
+                result =
+                    row[property] && this.cache.protocol[row[property]]
+                        ? this.cache.protocol[row[property]]
+                        : row[property] || "-";
+            }
+            return result;
         }
     }
 };

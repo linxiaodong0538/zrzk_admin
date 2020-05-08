@@ -1,5 +1,10 @@
 export const SensorDialogOptions = [
     {
+        prop: "source",
+        type: "slot",
+        span: 24
+    },
+    {
         prop: "sensorType",
         label: "传感器类型",
         type: "select",
@@ -42,6 +47,12 @@ export const SensorDialogOptions = [
 export const BuiltinDialogOptions = [
     {
         prop: "productFieldName",
+        label: "数据标识",
+        type: "text",
+        span: 24
+    },
+    {
+        prop: "productFieldNameCn",
         label: "数据名称",
         type: "text",
         span: 24
@@ -90,17 +101,20 @@ export const FormOptions = [
 ]
 
 export const SensorTableOptions = [
-    { prop: "sensorName", label: "传感器名称" },
-    { prop: "sensorType", label: "传感器类型" },
-    { prop: "dataName", label: "数据名称" },
-    { prop: "dataType", label: "数据类型" },
-    { prop: "range", label: "范围", formatter(row, column){ return `${row['minValue']} - ${row['maxValue']}` } },
-    { prop: "unit", label: "单位" }
+    { prop: "productFieldNameCn", label: "数据名称" },
+    { prop: "productFieldName", label: "数据标识" },
+    { prop: "protocolFieldName", label: "协议标识" },
+    { prop: "productDataType", label: "数据类型" },
+    { prop: "range", label: "范围", formatter(row, column) { return `${row['minValue'] === null?'': row['minValue']} ~ ${row['maxValue']=== null?'': row['maxValue']}` } },
+    { prop: "unit", label: "单位" },
+    { prop: "sort", label: "排序" },
+    { prop: "soruceType", label: "来源", formatter(row, column) { return row['sourceType'] === '1' ? '传感器' : '设备'; } },
 ];
 
 export const BuiltinTableOptions = [
-    { prop: "productFieldName", label: "数据名称" },
+    { prop: "productFieldName", label: "数据标识" },
+    { prop: "productFieldNameCn", label: "数据名称" },
     { prop: "productDataType", label: "数据类型" },
-    { prop: "range", label: "范围", formatter(row, column){ return `${row['minValue']} - ${row['maxValue']}` } },
+    { prop: "range", label: "范围", formatter(row, column) { return `${row['minValue'] === null?'': row['minValue']} ~ ${row['maxValue']=== null?'': row['maxValue']}` } },
     { prop: "unit", label: "单位" },
 ];

@@ -1,29 +1,28 @@
 <template>
   <div class="xny-xinzeng">
-   <el-table :data="typeList" @selection-change="">
-            <el-table-column type="selection" width="55" align="center" />
-            <el-table-column label="有功电能" align="center" prop="lanternsName" />
-            <el-table-column label="无功电能" align="center" prop="lanternsName" />
-            <el-table-column label="视在电能" min-width="100" align="center" prop="controllerAddress" />
-            <el-table-column label="运行时间" min-width="120" align="center" prop="reportingTime" />
-           
-          </el-table>
-      <div slot="footer" class="dialog-footer layui-layer-btn">
+    <div class="xny-Manhole">
+      <span>任务名称：</span>
+      <el-input placeholder size="small" class="Manhole" v-model="coverNumber" />
+    </div>
+    <el-table :data="typeList">
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="策略名称" align="center" prop="lanternsName" />
+      <el-table-column label="描述" align="center" prop="lanternsName" />
+    </el-table>
+    <div slot="footer" class="dialog-footer layui-layer-btn">
       <el-button type="primary" size="mini">确 定</el-button>
       <el-button @click="cancel" size="mini">关 闭</el-button>
-    </div>
     </div>
   </div>
 </template>
 <script>
-
 export default {
   props: ["id", "label"],
   data() {
     return {
       // 表单参数
       form: {},
-        typeList: [
+      typeList: [
         {
           lanternsName: "-", //灯具名称
           controllerAddress: "-", //灯控制器地址
@@ -48,31 +47,6 @@ export default {
       open: true,
       // 搜索区域
       fla: false,
-      //所在机构
-      mechanism: "",
-      options: [
-        {
-          value: "1",
-          label: "所有"
-        },
-        {
-          value: "2",
-          label: "项目5"
-        },
-        {
-          value: "3",
-          label: "项目6"
-        },
-        {
-          value: "4",
-          label: "项目4"
-        },
-        {
-          value: "5",
-          label: "项目3"
-        }
-      ],
-      value: "所有",
       coverNumber: "",
       longitude: "",
       latitude: "",
@@ -81,29 +55,29 @@ export default {
     };
   },
   methods: {
-   
     // 取消按钮
     cancel() {
       this.open = false;
-      this.$emit("cancel", this.open);
-    },
-    searchArea() {
-      this.fla = true;
-      this.title = "新增井盖";
-      this.getTreeselect();
-    },
-   
+      this.$emit("cancel2", this.open);
+    }
   }
 };
 </script>
 
 <style lang="scss" scoped>
-.layui-layer-btn{
+.xny-Manhole{
+  margin-bottom: 20px;
+}
+.layui-layer-btn {
   padding-right: 20px;
   margin-top: 20px;
 }
 .dialog-footer {
   // float: right;
   text-align: right;
+}
+.Manhole {
+  width: 200px;
+  height: 30px;
 }
 </style>

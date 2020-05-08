@@ -4,7 +4,6 @@
       <div class="box-header">
         <div class="tabBackground" :class="{tabBackgrounddefault:fla==0}" @click="region">区域</div>
         <div class="tabBackground2" :class="{tabBackgrounddefault:fla==1}" @click="coverGroup">分组</div>
-        
       </div>
       <div v-show="fla == 0" class="regionList">
         <div class="head-container">
@@ -15,7 +14,7 @@
             :filter-node-method="filterNode"
             ref="tree"
             default-expand-all
-            @node-click="handleNodeClick"
+            @node-click="handleNodeClick" 
           />
         </div>
       </div>
@@ -38,18 +37,17 @@
       <div class="xny-cover">
         <div class="xny-Manhole">
           <span class="coverList">报警类型:</span>
-          <el-select v-model="value" placeholder>
+          <el-select v-model="value" placeholder  class="Manhole">
             <el-option
               v-for="item in alarmType"
               :key="item.value"
               :label="item.label"
               :value="item.value"
               size="small"
-              class="Manhole"
             ></el-option>
           </el-select>
           <span class="coverList">所属项目:</span>
-          <el-select v-model="value" placeholder>
+          <el-select v-model="value" placeholder  class="Manhole">
             <el-option
               v-for="item in options"
               :key="item.value"
@@ -60,7 +58,7 @@
             ></el-option>
           </el-select>
           <span class="coverList">设备类型:</span>
-          <el-select v-model="value" placeholder>
+          <el-select v-model="value" placeholder  class="Manhole">
             <el-option
               v-for="item in equipmentType"
               :key="item.value"
@@ -83,16 +81,16 @@
             align="center"
             size="small"
              style="width: 240px;"
+              class="Manhole"
           ></el-date-picker>
            <span class="coverList">解除状态:</span>
-          <el-select v-model="value" placeholder>
+          <el-select v-model="value" placeholder class="Manhole">
             <el-option
               v-for="item in equipmentType"
               :key="item.value"
               :label="item.label"
               :value="item.value"
               size="small"
-              class="Manhole"
             ></el-option>
              </el-select>
           <!-- @click="handleQuery" -->
@@ -121,18 +119,17 @@
           </el-col>
         </el-row>
         <!-- v-loading="loading" -->
-        <el-table :data="typeList" @selection-change="handleSelectionChange">
+        <el-table :data="typeList"  v-loading="loading" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="55" align="center" />
-          <el-table-column label="报警编号" align="center" prop="region" />
-          <el-table-column label="设备ID"  min-width="100" align="center" prop="deviceState" />
-          <el-table-column label="设备名称" align="center" prop="alarmView" />
-          <el-table-column label="报警类型" align="center" prop="processing" />
-          <el-table-column label="报警描述" align="center" prop="voltage" />
-          <el-table-column label="报警级别" align="center" prop="voltage" />
+          <el-table-column label="报警编号" align="center" prop="alertCode" />
+          <el-table-column label="设备编号" min-width="100" align="center" prop="deviceCode" />
+          <el-table-column label="产品名称" align="center" prop="productName" />
+          <el-table-column label="报警类型" align="center" prop="alertType" />
+          <el-table-column label="报警描述" align="center" prop="alertDesc" />
           <el-table-column label="报警状态" align="center" prop="current" />
           <el-table-column label="解除人" align="center" prop="activePower" />
-          <el-table-column label="报警时间" align="center" prop="reactivePower" />
-           <el-table-column label="操作">
+          <el-table-column label="报警时间" align="center" prop="createDate" />
+           <el-table-column label="操作" min-width="100">
             <template slot-scope="scope">
               <span class="viewData" @click="deviceInformation">解除警报</span>
             </template>
@@ -152,7 +149,7 @@
 </template>
 <script>
 //   wellGroup
-import { region, coverForm } from "@/api/system/cover/coverManagement";
+import { region, wellGroup,deviceAlarm } from "@/api/system/cover/coverManagement";
 import { treeselect } from "@/api/system/dept";
 export default {
   components: {},
@@ -291,23 +288,7 @@ export default {
       // 井盖管理数据
       typeList: [
         {
-          deviceName: "", //设备名称
-          eviceID: "99887766", //设备ID
-          region: "-", //在线状态
-          deviceState: "55669988", //设备状态
-          alarmView: "", //报警查看
-          processing: "-", //一键处理
-          voltage: "-", //电压
-          current: "-", //电流
-          activePower: "-", //有功功率
-          reactivePower: "-", //有功功率
-          powerFactor: "-", //功率因数
-          temperature: "-", //温度
-          signalIntensity: "-", //信号强度
-          NB_IMSI: "-", //NB_IMSI
-          apparentPower: "-", //视在电能
-          runningTime: "-", //运行时间
-          reportingTime: "-" //上报时间
+        
         }
       ],
       // 弹出层标题
@@ -345,7 +326,7 @@ export default {
     //区域
     this.getTreeselect();
     //井盖表格所有数据
-    // this.getList();
+    this.getList();
 
     this.getDicts("sys_normal_disable").then(response => {
       this.statusOptions = response.data;
@@ -354,45 +335,32 @@ export default {
   methods: {
     /** 区域 */
     getTreeselect() {
-      //   region().then(response => {
-      //     this.deptOptions = response.data;
-      //     this.management.id = this.deptOptions[0].id;
-      //     this.management.label = this.deptOptions[0].label;
-      //     console.log(this.management.id);
-      //   });
+        region().then(response => {
+          this.deptOptions = response.data;
+          this.management.id = this.deptOptions[0].id;
+          this.management.label = this.deptOptions[0].label;
+          console.log(this.management.id);
+        });
 
-      //这是静态页面的修改
-      treeselect().then(response => {
-        this.deptOptions = response.data;
-        this.management.id = this.deptOptions[0].id;
-        this.management.label = this.deptOptions[0].label;
-        // console.log(this.management.id);
-      });
+   
     },
     //区域
     region() {
       this.fla = 0;
-      //   region().then(response => {
-      //     this.deptOptions = response.data;
-      //     this.management.id = this.deptOptions[0].id;
-      //     this.management.label = this.deptOptions[0].label;
-      //   });
-      //这是静态页面的修改
-      treeselect().then(response => {
-        this.deptOptions = response.data;
-        this.management.id = this.deptOptions[0].id;
-        this.management.label = this.deptOptions[0].label;
-        // console.log(this.management.id);
-      });
+        region().then(response => {
+          this.deptOptions = response.data;
+          this.management.id = this.deptOptions[0].id;
+          this.management.label = this.deptOptions[0].label;
+        });
     },
     // 分组
     coverGroup() {
       this.fla = 1;
-      //   wellGroup().then(response => {
-      //     this.deptOptions = response.data;
-      //     this.managementGrouping.id = this.deptOptions[0].id;
-      //     this.managementGrouping.label = this.deptOptions[0].label;
-      //   });
+        wellGroup().then(response => {
+          this.deptOptions = response.data;
+          this.managementGrouping.id = this.deptOptions[0].id;
+          this.managementGrouping.label = this.deptOptions[0].label;
+        });
     },
     // 筛选节点
     filterNode(value, data) {
@@ -422,26 +390,26 @@ export default {
     },
     //表单
     /** 查询井盖管理 */
-    // getList() {
-    //   //  //井盖编号
-    //   // coverNumber: "",
-    //   // //创建时间
-    //   // creationTime:"",
-    //   let areaId = this.management.id;
-    //   let deviceGroupId = this.managementGrouping.id;
-    //   let coverNumber = this.coverNumber;
-    //   let creationTime = this.creationTime;
-    //   this.loading = true;
+    getList() {
+      //  //井盖编号
+      // coverNumber: "",
+      // //创建时间
+      // creationTime:"",
+      // let areaId = this.management.id;
+      // let deviceGroupId = this.managementGrouping.id;
+      // let coverNumber = this.coverNumber;
+      // let creationTime = this.creationTime;
+      this.loading = true;
 
-    //   coverForm(this.addDateRange(this.queryParams, this.dateRange)).then(
-    //     response => {
-    //       // console.log(response);
-    //       this.typeList = response.rows;
-    //       this.total = response.total;
-    //       this.loading = false;
-    //     }
-    //   );
-    // },
+      deviceAlarm(this.addDateRange(this.queryParams, this.dateRange)).then(
+        response => {
+          console.log(response);
+          this.typeList = response.rows;
+          // this.total = response.total;
+          this.loading = false;
+        }
+      );
+    },
     // 字典状态字典翻译
     statusFormat(row, column) {
       return this.selectDictLabel(this.statusOptions, row.status);

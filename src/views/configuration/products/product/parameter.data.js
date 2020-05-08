@@ -1,6 +1,12 @@
 export const DialogOptions = [
     {
         prop: "productFieldName",
+        label: "数据标识",
+        type: "text",
+        span: 24
+    },
+    {
+        prop: "productFieldNameCn",
         label: "数据名称",
         type: "text",
         span: 24
@@ -13,13 +19,13 @@ export const DialogOptions = [
         options: []
     }, 
     {
-        prop: "isNullable",
-        label: "是否为空",
+        prop: "isEmpty",
+        label: "允许为空",
         type: "select",
         span: 24,
         options: [
-            { label: "是", value: true },
-            { label: "否", value: false }
+            { label: "是", value: 0 },
+            { label: "否", value: 1 }
         ]
     },
     {

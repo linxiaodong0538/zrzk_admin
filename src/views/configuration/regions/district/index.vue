@@ -26,46 +26,51 @@
                             type="primary"
                             icon="el-icon-plus"
                             size="mini"
+                            plain
                             @click="handleAdd"
-                            v-hasPermi="['system:user:add']"
+                            v-hasPermi="['configuration:district:add']"
                         >新增</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="success"
+                            type="primary"
                             icon="el-icon-edit"
                             size="mini"
+                            plain
                             :disabled="single"
                             @click="handleUpdate"
-                            v-hasPermi="['system:user:edit']"
+                            v-hasPermi="['configuration:district:edit']"
                         >修改</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="danger"
+                            type="primary"
                             icon="el-icon-delete"
                             size="mini"
+                            plain
                             :disabled="multiple"
                             @click="handleDelete()"
-                            v-hasPermi="['system:user:remove']"
+                            v-hasPermi="['configuration:district:remove']"
                         >删除</el-button>
                     </el-col>
                     <!-- <el-col :span="1.5">
                         <el-button
-                            type="info"
+                            type="primary"
                             icon="el-icon-upload2"
                             size="mini"
-                            @click="handleImport"
-                            v-hasPermi="['system:user:import']"
+                            plain
+@click="handleImport"
+                            v-hasPermi="['configuration:district:import']"
                         >导入</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="warning"
+                            type="primary"
                             icon="el-icon-download"
                             size="mini"
+                            plain
                             @click="handleExport"
-                            v-hasPermi="['system:user:export']"
+                            v-hasPermi="['configuration:district:export']"
                         >导出</el-button>
                     </el-col>-->
                 </el-row>
@@ -167,14 +172,10 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
             // 岗位选项
             postOptions: [],
             // 角色选项
@@ -190,7 +191,11 @@ export default {
             },
             /** form ^ */
             /** 查询参数 */
-            formData: {},
+            formData: {
+                areaCode: '',
+                areaName: '',
+                areaAddr: ''
+            },
             formOptions: FormOptions,
             formRules: {},
             /** form $ */
@@ -205,10 +210,24 @@ export default {
             models: [],
             /** table $ */
             /** dialog ^ */
-            dialogForm: { 
-            },
+            dialogForm: {},
             dialogOptions: DialogOptions,
-            dialogRules: {},
+            dialogRules: {
+                areaName: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    }
+                ],
+                areaCode: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    }
+                ]
+            },
             dialogVisible: false,
             /** dialog $ */
             // 表单校验
@@ -269,13 +288,6 @@ export default {
         }
     },
     created() {
-        console.log(
-            this.formOptions
-                .map(x => {
-                    return `${x.prop}: ''`;
-                })
-                .join(",")
-        );
         this.search();
         this.getTreeData();
         this.getDicts("sys_normal_disable").then(({ data }) => {
@@ -294,19 +306,6 @@ export default {
             //     value: x.dictValue
             // }));
             // this.$forceUpdate();
-        });
-        this.getDicts("sys_user_sex").then(response => {
-            this.sexOptions = response.data;
-            let node = this.dialogOptions.find(x => x.prop === "sex");
-            if (node) {
-                node.options = this.sexOptions.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }));
-            }
-        });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
         });
     },
     methods: {
@@ -438,19 +437,15 @@ export default {
         },
         /** 新增按钮操作 */
         handleAdd(t) {
-            console.log(t);
-            this.reset();
-            this.getTreeData();
-            this.getPositions();
-            this.getRoles();
-            if (t == "open") this.open = true;
-            else this.dialogVisible = true;
+            this.dialogForm = {};
+            this.dialogVisible = true;
             this.title = "新增";
-            this.form.password = this.initPassword;
         },
         /** 修改按钮操作 */
         handleUpdate(row) {
-            this.dialogForm = row;
+            const id = row && row.areaId ? row.areaId : this.ids[0];
+            const node = this.models.find(x => x.areaId == id);
+            this.dialogForm = Object.assign({}, node);
             this.dialogVisible = true;
             this.title = "修改";
         },
@@ -462,6 +457,7 @@ export default {
                     if (response.code === 200) {
                         this.msgSuccess("修改成功");
                         this.dialogVisible = false;
+                        this.getTreeData();
                         this.search();
                     } else {
                         this.msgError(response.msg);
@@ -472,6 +468,7 @@ export default {
                     if (response.code === 200) {
                         this.msgSuccess("新增成功");
                         this.dialogVisible = false;
+                        this.getTreeData();
                         this.search();
                     } else {
                         this.msgError(response.msg);
@@ -481,7 +478,7 @@ export default {
         },
         /** 删除按钮操作 */
         handleDelete(row) {
-            const ids = this.ids.length ? this.ids : [row.areaId];
+            const ids = row && row.areaId ? [row.areaId] : this.ids;
             this.$confirm("是否确认删除数据项?", "警告", {
                 confirmButtonText: "确定",
                 cancelButtonText: "取消",

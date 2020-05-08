@@ -1,7 +1,7 @@
 <template>
     <el-dialog
         :title="title"
-        :visible.sync="visible"
+        :visible.sync="isShowing"
         :width="width"
         :close-on-click-modal="false"
         :close-on-press-escape="false"
@@ -9,15 +9,16 @@
         :show-close="showClose"
         :append-to-body="appendToBody"
     >
-        <el-form ref="form" :model="form" :rules="rules" :label-width="labelWidth">
+        <el-form ref="frm" :model="form" :rules="rules" :label-width="labelWidth">
             <el-row>
-                <template v-for="opt in options">
+                <template v-for="(opt, idx) in options">
                     <!-- <el-col v-if="opt.offset" :span="opt.offset?opt.offset:12"><div></div></el-col> -->
                     <el-col
                         :span="opt.span === null?undefined:(opt.span || 12)"
                         :offset="opt.offset"
                         :pull="opt.pull"
                         :push="opt.push"
+                        :key="'col'+idx"
                     >
                         <slot v-if="opt.type==='slot'" :name="opt.prop"></slot>
                         <el-form-item
@@ -34,6 +35,7 @@
                                 :placeholder="opt.placeholder"
                                 :disabled="opt.disabled"
                                 :filterable="opt.filterable"
+                                :clearable="opt.clearable === undefined?false:opt.clearable"
                                 @change="change({ category: opt.prop, value: form[opt.prop], data: opt.options.find(x=>x.value===form[opt.prop]) }) "
                             >
                                 <el-option
@@ -50,27 +52,38 @@
                                 v-model="form[opt.prop]"
                                 :options="opt.options"
                                 :placeholder="opt.placeholder"
+                                :disabled="opt.disabled"
                             />
 
                             <el-cascader
                                 v-else-if="opt.type=== 'cascader'"
                                 v-model="form[opt.prop]"
                                 :options="opt.options"
+                                :disabled="opt.disabled"
                                 :clearable="opt.clearable === undefined?true:opt.clearable"
-                                :props="{ value: 'id', multiple:opt.multiple === undefined?false:opt.multiple, emitPath: opt.emitPath === undefined?false:opt.emitPath  }"
+                                :props="{ value: 'id', multiple:opt.multiple === undefined?false:opt.multiple, emitPath: opt.emitPath === undefined?false:opt.emitPath,
+                                    checkStrictly: opt.checkStrictly === undefined?false: opt.checkStrictly
+                                  }"
                             ></el-cascader>
 
                             <el-upload
                                 v-else-if="opt.type==='file'"
+                                v-model="form[opt.prop]"
                                 class="avatar-uploader"
                                 :action="opt.action?mapping({ category: 'file', data: opt.action }):uploadImgUrl"
                                 :show-file-list="false"
-                                :on-success="handleAvatarSuccess"
-                                :before-upload="beforeAvatarUpload"
+                                :on-success="opt.onSuccess || handleAvatarSuccess"
+                                :before-upload="opt.beforeUpload || beforeAvatarUpload"
                                 :headers="headers"
-                                accept=".jpg, .jpeg, .png, .gif"
+                                :data="{ prop: opt.prop }"
+                                :disabled="opt.disabled"
+                                accept="image/*"
                             >
-                                <img v-if="form[opt.prop]" :src="form[opt.prop]" class="avatar" />
+                                <img
+                                    v-if="form[opt.prop]"
+                                    :src="form[opt.prop]"
+                                    class="avatar"
+                                />
                                 <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                             </el-upload>
 
@@ -89,6 +102,7 @@
                                 v-model="form[opt.prop]"
                                 :picker-options="opt.pickerOptions"
                                 :placeholder="opt.placeholder"
+                                :disabled="opt.disabled"
                             ></el-time-select>
 
                             <el-switch
@@ -100,6 +114,7 @@
                             <el-radio-group
                                 v-else-if="opt.type === 'radio'"
                                 v-model="form[opt.prop]"
+                                :disabled="opt.disabled"
                             >
                                 <el-radio
                                     v-for="item in opt.options"
@@ -114,6 +129,8 @@
                                 v-model="form[opt.prop]"
                                 :disabled="opt.disabled"
                                 :controls="false"
+                                :readonly="opt.readonly"
+                                @focus="focus({category: opt.prop, value: form[opt.prop], data: form[opt.prop]})"
                             ></el-input-number>
 
                             <el-input
@@ -122,7 +139,18 @@
                                 v-model="form[opt.prop]"
                                 :autosize="opt.autosize || undefined"
                                 :placeholder="opt.placeholder || undefined"
-                            />
+                                :disabled="opt.disabled"
+                                :readonly="opt.readonly"
+                                @focus="focus({category: opt.prop, value: form[opt.prop], data: form[opt.prop]})"
+                            >
+                                <el-button
+                                    slot="append"
+                                    v-if="opt.append && opt.append.startsWith('el-icon')"
+                                    :icon="opt.append || 'el-icon-search'"
+                                    @click="focus({category: opt.prop, value: form[opt.prop], data: form[opt.prop]})"
+                                ></el-button>
+                                <template slot="append" v-else-if="opt.append">{{ opt.append }}</template>
+                            </el-input>
                         </el-form-item>
                     </el-col>
                 </template>
@@ -133,6 +161,7 @@
             <el-button type="primary" @click="submitForm" size="small">确 定</el-button>
             <el-button @click="cancel" size="small">取 消</el-button>
         </div>
+        <slot name="footer"></slot>
     </el-dialog>
 </template>
 <style scoped>
@@ -199,6 +228,7 @@ export default {
     },
     data() {
         return {
+            isShowing: false,
             pager: new Paginator(),
             uploadImgUrl: process.env.VUE_APP_BASE_API + "/common/upload",
             headers: {
@@ -206,45 +236,58 @@ export default {
             }
         };
     },
+    watch: {
+        visible(v) {
+            this.isShowing = v;
+        },
+        isShowing(v) {
+            this.$emit("update:visible", v);
+        }
+    },
     methods: {
         submitForm() {
-            console.log("commit", this.$refs["form"], arguments);
-            this.$refs["form"].validate(valid => {
+            this.$refs["frm"].validate(valid => {
                 if (valid) {
-                    this.$refs["form"].clearValidate();
+                    this.$refs["frm"].clearValidate();
                     this.$emit("callback");
                 }
             });
         },
 
         resetForm() {
-            this.$refs["form"].resetFields();
+            this.$refs["frm"].resetFields();
         },
         cancel() {
             this.$emit("update:visible", false);
         },
         change(parameters) {
-            console.log("change", parameters);
             this.$emit(`change`, parameters);
         },
-        handleAvatarSuccess(res, file, prop) {
-            console.log("file", res, file, prop);
-            this.$refs.form["imageUrl"] = URL.createObjectURL(file.raw);
+        focus(parameters) {
+            this.$emit(`focus`, parameters);
         },
-        beforeAvatarUpload(file) {
-            const isJPG = file.type === "image/jpeg";
+        handleAvatarSuccess(res, file) {
+            console.log("upload", res, file);
+            let { fileName, url } = res;
+            console.log("file", res, file);
+            this.form["imageUrl"] = url;// fileName; // URL.createObjectURL(file.raw);
+            this.$forceUpdate();
+        },
+        beforeAvatarUpload(file, a) {
+            const isImage = file.type.includes("image/");
             const isLt2M = file.size / 1024 / 1024 < 2;
 
-            if (!isJPG) {
-                this.$message.error("上传头像图片只能是 JPG 格式!");
+            if (!isImage) {
+                this.$message.error("只接受图片格式!");
             }
             if (!isLt2M) {
                 this.$message.error("上传头像图片大小不能超过 2MB!");
             }
-            return isJPG && isLt2M;
+            return isImage && isLt2M;
         },
         mapping({ category, data }) {
             if (category === "file") {
+                // console.log(process.env.VUE_APP_BASE_API + data);
                 return process.env.VUE_APP_BASE_API + data;
             }
         }
@@ -277,14 +320,14 @@ export default {
 .avatar-uploader-icon {
     font-size: 28px;
     color: #8c939d;
-    width: 90px;
-    height: 90px;
-    line-height: 90px;
+    width: 85px;
+    height: 85px;
+    line-height: 85px;
     text-align: center;
 }
 .avatar {
-    width: 90px;
-    height: 90px;
+    width: 85px;
+    height: 85px;
     display: block;
 }
 </style>

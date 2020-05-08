@@ -38,7 +38,7 @@ export const DialogOptions = [
         type: "select",
         span: 12,
         placeholder: "请选择",
-        options: [{ label: '移动', value: 1 }, { label: '联通', value: 2 }, { label: '电信', value: 3 }]
+        options: []
     },
     {
         prop: "waterNum",

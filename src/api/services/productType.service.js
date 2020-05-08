@@ -6,7 +6,7 @@ import {SuperService} from './_.service';
 export class ProductTypeService extends SuperService {
 
     constructor() {
-        super({ url: '/device/deviceRegister' });
+        super({ url: '/productType' });
     }
 
     /** 查询产品类型列表 */

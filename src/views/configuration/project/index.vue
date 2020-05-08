@@ -26,46 +26,51 @@
                             type="primary"
                             icon="el-icon-plus"
                             size="mini"
+                            plain
                             @click="handleAdd"
-                            v-hasPermi="['system:user:add']"
+                            v-hasPermi="['configuration:project:add']"
                         >新增</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="success"
+                            type="primary"
                             icon="el-icon-edit"
                             size="mini"
+                            plain
                             :disabled="single"
                             @click="handleUpdate"
-                            v-hasPermi="['system:user:edit']"
+                            v-hasPermi="['configuration:project:edit']"
                         >修改</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="danger"
+                            type="primary"
                             icon="el-icon-delete"
                             size="mini"
+                            plain
                             :disabled="multiple"
                             @click="handleDelete"
-                            v-hasPermi="['system:user:remove']"
+                            v-hasPermi="['configuration:project:remove']"
                         >删除</el-button>
                     </el-col>
                     <!-- <el-col :span="1.5">
                         <el-button
-                            type="info"
+                            type="primary"
                             icon="el-icon-upload2"
                             size="mini"
+                            plain
                             @click="handleImport"
-                            v-hasPermi="['system:user:import']"
+                            v-hasPermi="['configuration:project:import']"
                         >导入</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="warning"
+                            type="primary"
                             icon="el-icon-download"
                             size="mini"
+                            plain
                             @click="handleExport"
-                            v-hasPermi="['system:user:export']"
+                            v-hasPermi="['configuration:project:export']"
                         >导出</el-button>
                     </el-col>-->
                 </el-row>
@@ -93,14 +98,14 @@
                                 type="text"
                                 icon="el-icon-edit"
                                 @click="handleUpdate(scope.row)"
-                                v-hasPermi="['configuration:region:edit']"
+                                v-hasPermi="['configuration:project:edit']"
                             >修改</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-delete"
                                 @click="handleDelete(scope.row)"
-                                v-hasPermi="['configuration:region:remove']"
+                                v-hasPermi="['configuration:project:remove']"
                             >删除</el-button>
                         </template>
                     </el-table-column>
@@ -116,9 +121,42 @@
             :rules="dialogRules"
             :visible.sync="dialogVisible"
             @callback="submitForm"
+            @focus="onListen"
         ></x-dialog>
 
         <el-dialog :visible.sync="isDetailVisible"></el-dialog>
+        <el-dialog :visible.sync="isBaiduMapDialogVisible" :append-to-body="true">
+            <template>
+                <baidu-map
+                    class="bm-view"
+                    :center="anchor"
+                    :zoom="16"
+                    style="width: 100%; height: 50vh;"
+                    ak="k1gYhyr8h8ksQN63Z1Mu0xNuhiZCr157"
+                    :scroll-wheel-zoom="true"
+                    :double-click-zoom="false"
+                    @click="pick"
+                >
+                    <bm-navigation anchor="BMAP_ANCHOR_TOP_RIGHT"></bm-navigation>
+                    <bm-view style="width: 100%; height:100%; flex: 1" @click="pick"></bm-view>
+                    <bm-marker
+                        v-if="current.point['lng'] && current.point['lat']"
+                        :position="{lng: current.point['lng'], lat: current.point['lat'] }"
+                        :dragging="true"
+                        @dragend="pick"
+                        animation="1BMAP_ANIMATION_BOUNCE"
+                    ></bm-marker>
+                </baidu-map>
+            </template>
+            <div slot="footer" class="dialog-footer">
+                <div style="float: left;">
+                    <span>经度： {{ current.point['lng'] }}</span>
+                    <span style="margin-left: 20px;">纬度： {{ current.point['lat'] }}</span>
+                </div>
+                <el-button type="primary" @click="pin({ point: current.point })">确 定</el-button>
+                <el-button @click="isBaiduMapDialogVisible = false">取 消</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -167,20 +205,22 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
+            /** 传感器列表 */
+            sensorOptions: [],
             // 岗位选项
             postOptions: [],
-            // 角色选项
-            roleOptions: [],
+            // 区域选项
+            areaOptions: [],
             current: {
-                deptId: undefined
+                deptId: undefined,
+                point: {}
+            },
+            cache: {
+                areas: {}
             },
             // 表单参数
             form: {},
@@ -190,36 +230,85 @@ export default {
             },
             /** form ^ */
             /** 查询参数 */
-            formData: {},
+            formData: {
+                dateRange: []
+            },
             formOptions: FormOptions,
             formRules: {},
             /** form $ */
             /** table ^ */
             pagination: new Paginator(),
             options: [
-                { prop: "projectId", label: "ID" },
+                // { prop: "projectId", label: "ID" },
                 { prop: "projectName", label: "项目名称" },
+                { prop: "areaName", label: "项目区域" },
+                { prop: "longitude", label: "经度" },
+                { prop: "latitude", label: "纬度" },
                 { prop: "remark", label: "备注" },
                 { prop: "createTime", label: "创建日期" }
             ],
             models: [],
             /** table $ */
             /** dialog ^ */
-            dialogForm: {
-                nickName: "",
-                deptId: 100,
-                phonenumber: "",
-                email: "",
-                userName: "",
-                sex: "",
-                status: "0",
-                postIds: "",
-                roleIds: "",
-                remark: ""
-            },
+            dialogForm: {},
             dialogOptions: DialogOptions,
-            dialogRules: {},
+            dialogRules: {
+                areaId: [
+                    { required: true, message: "必选", trigger: "change" }
+                ],
+                projectName: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    },
+                    {
+                        validator: async (
+                            rule,
+                            value,
+                            callback,
+                            source,
+                            options
+                        ) => {
+                            const field = rule.field;
+                            if (!field) return callback();
+                            console.log("validator", field, rule, value);
+                            console.log(">>>", source, options);
+                            if (
+                                value == "" ||
+                                value == undefined ||
+                                value == null
+                            ) {
+                                callback();
+                            } else {
+                                const params = {
+                                    id: this.dialogForm.projectId,
+                                    name: value
+                                };
+                                const { data } = await this.$project.validate(
+                                    params
+                                );
+
+                                // const count = this.models.filter(
+                                //     x =>
+                                //         x[field] === value &&
+                                //         (!this.dialogForm.projectId ||
+                                //             this.dialogForm.projectId !=
+                                //                 x.projectId)
+                                // ).length;
+                                callback(
+                                    data
+                                        ? new Error("项目名称已被使用")
+                                        : undefined
+                                );
+                            }
+                        },
+                        trigger: "blur"
+                    }
+                ]
+            },
             dialogVisible: false,
+            isBaiduMapDialogVisible: false,
             /** dialog $ */
             // 表单校验
             rules: {
@@ -287,48 +376,39 @@ export default {
                 .join(",")
         );
         this.search();
-        // this.getTreeData();
-        this.getDicts("sys_normal_disable").then(({ data }) => {
-            this.statusOptions.push(
-                ...data.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }))
-            );
-            let node = this.formOptions.find(x => x.prop === "status");
-            if (node) node.options = this.statusOptions;
-            node = this.dialogOptions.find(x => x.prop === "status");
-            if (node) node.options = this.statusOptions;
-            // this.statusOptions = data.map(x => ({
-            //     label: x.dictLabel,
-            //     value: x.dictValue
-            // }));
-            // this.$forceUpdate();
+        this.$area.treeselect().then(({ data }) => {
+            this.areaOptions = data;
+            this.cache.areas = this.calculate(data);
+            let node = this.dialogOptions.find(x => x.prop === "areaId");
+            if (node) node.options = this.areaOptions;
         });
-        this.getDicts("sys_user_sex").then(response => {
-            this.sexOptions = response.data;
-            let node = this.dialogOptions.find(x => x.prop === "sex");
-            if (node) {
-                node.options = this.sexOptions.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }));
+    },
+    computed: {
+        anchor() {
+            if (this.dialogForm.longitude && this.dialogForm.latitude) {
+                return {
+                    lng: this.dialogForm.longitude,
+                    lat: this.dialogForm.latitude
+                };
             }
-        });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
-        });
+            if (this.cache.areas[this.dialogForm.areaId]) {
+                return this.cache.areas[this.dialogForm.areaId].label;
+            }
+            return "福州";
+        }
     },
     methods: {
         /** 查询用户列表 */
         search() {
             console.log("trigger search", this.formData);
-            let start = this.formData.dateRange
-                ? moment(this.formData.dateRange[0]).format("YYYY-MM-DD")
-                : undefined;
-            let end = this.formData.dateRange
-                ? moment(this.formData.dateRange[1]).format("YYYY-MM-DD")
-                : undefined;
+            let start =
+                this.formData.dateRange && this.formData.dateRange[0]
+                    ? moment(this.formData.dateRange[0]).format("YYYY-MM-DD")
+                    : undefined;
+            let end =
+                this.formData.dateRange && this.formData.dateRange[1]
+                    ? moment(this.formData.dateRange[1]).format("YYYY-MM-DD")
+                    : undefined;
             let params = Object.assign({}, this.formData, {
                 pageNum: this.pagination.index,
                 pageSize: this.pagination.size,
@@ -339,23 +419,18 @@ export default {
             });
             delete params.dateRange;
             this.loading = true;
-            this.$project.all(params).then(({ rows, total }) => {
-                this.loading = false;
-                this.models = rows;
-                this.pagination.all = total;
-            });
-        },
-        /** 查询部门下拉树结构 */
-        getTreeData() {
-            //this.$area.treeselect()
-            treeselect().then(response => {
-                this.deptOptions = response.data;
-
-                let node = this.dialogOptions.find(x => x.prop === "deptId");
-                if (node) node.options = this.deptOptions;
-                // let node = this..find(x => x.prop === "deptId");
-                // if (node) node.options = this.deptOptions;
-            });
+            this.$project.search(params).then(
+                ({ rows, total }) => {
+                    this.loading = false;
+                    this.models = rows;
+                    this.pagination.all = total;
+                },
+                err => {
+                    this.loading = false;
+                    this.models = [];
+                    this.pagination.all = 0;
+                }
+            );
         },
         // 筛选节点
         filterNode(value, data) {
@@ -378,6 +453,29 @@ export default {
             listRole().then(response => {
                 this.roleOptions = response.rows;
             });
+        },
+        onListen({ category, value }) {
+            if (["longitude", "latitude"].includes(category)) {
+                console.log(category, "clicked");
+                this.current.point = {
+                    lng: this.dialogForm["longitude"],
+                    lat: this.dialogForm["latitude"]
+                };
+                this.isBaiduMapDialogVisible = true;
+            }
+        },
+        pin({ point }) {
+            this.$set(this.dialogForm, "longitude", point.lng);
+            this.$set(this.dialogForm, "latitude", point.lat);
+            this.isBaiduMapDialogVisible = false;
+        },
+        pick({ point }) {
+            // console.log(BMap, map, arguments);
+            // this.center.lng = 116.404;
+            // this.center.lat = 39.915;
+            // this.zoom = 15;
+            this.current.point["lng"] = point.lng;
+            this.current.point["lat"] = point.lat;
         },
         // 用户状态修改
         handleStatusChange(row) {
@@ -448,21 +546,28 @@ export default {
             this.current.node = data;
         },
         /** 新增按钮操作 */
-        handleAdd(t) {
-            console.log(t);
-            // this.reset();
-            // this.getTreeData();
+        handleAdd() {
+            this.current.point = {};
             this.dialogForm = {};
-            if (t == "open") this.open = true;
-            else this.dialogVisible = true;
+            this.dialogVisible = true;
             this.title = "新增";
-            this.form.password = this.initPassword;
         },
         /** 修改按钮操作 */
         handleUpdate(row) {
-            this.dialogForm = row;
+            const id = row && row.projectId ? row.projectId : this.ids[0];
+            const node = this.models.find(x => x.projectId == id);
+            this.dialogForm = Object.assign({}, node);
             this.dialogVisible = true;
             this.title = "修改";
+        },
+        calculate(roots, result = {}) {
+            for (let node of roots) {
+                result[node.id] = node;
+                if (node.children) {
+                    this.calculate(node.children || [], result);
+                }
+            }
+            return result;
         },
         /** 提交按钮 */
         submitForm() {
@@ -491,16 +596,13 @@ export default {
         },
         /** 删除按钮操作 */
         handleDelete(row) {
-            const ids = this.ids || [row.projectId];
-            this.$confirm(
-                '是否确认删除用户编号为"' + ids + '"的数据项?',
-                "警告",
-                {
-                    confirmButtonText: "确定",
-                    cancelButtonText: "取消",
-                    type: "warning"
-                }
-            )
+            // const ids = this.ids || [row.projectId];
+            const ids = row && row.projectId ? [row.projectId] : this.ids;
+            this.$confirm("是否确认删除数据项?", "警告", {
+                confirmButtonText: "确定",
+                cancelButtonText: "取消",
+                type: "warning"
+            })
                 .then(() => {
                     console.log("delete", ids);
                     return this.$project.remove({ ids: ids });
@@ -515,7 +617,7 @@ export default {
         handleExport() {
             const queryParams = this.queryParams;
 
-            this.$confirm("是否确认导出所有用户数据项?", "警告", {
+            this.$confirm("是否确认导出数据项?", "警告", {
                 confirmButtonText: "确定",
                 cancelButtonText: "取消",
                 type: "warning"

@@ -19,14 +19,14 @@
                             icon="el-icon-plus"
                             size="mini"
                             @click="handleAdd({ category: 'sensor' })"
-                            v-hasPermi="['system:user:add']"
-                        >传感器数据</el-button>
+                            v-hasPermi="['configuration:product:collect']"
+                        >上传数据</el-button>
                     </el-col>
                 </el-row>
 
                 <x-table
-                    :options="sensorOptions"
-                    :data="sensors"
+                    :options="options"
+                    :data="models"
                     :loading="loading"
                     :hasReset="true"
                     :isSelectable="false"
@@ -45,63 +45,16 @@
                             <el-button
                                 size="mini"
                                 type="text"
-                                icon="el-icon-delete"
-                                @click="handleDelete({ category: 'sensor', data: scope.row})"
-                                v-hasPermi="['configuration:region:remove']"
-                            >删除</el-button>
-                        </template>
-                    </el-table-column>
-                </x-table>
-            </el-col>
-        </el-row>
-        <el-row :gutter="0" style="margin-top: 20px;">
-            <!--部门数据-->
-            <!-- <el-col :span="4" :xs="24">
-                <x-tree
-                    :data="deptOptions"
-                    :filter-node-method="filterNode"
-                    :isFilterable="true"
-                    @node-click="handleNodeClick"
-                ></x-tree>
-            </el-col>-->
-            <!--用户数据-->
-            <el-col :span="24" :xs="24">
-                <el-row :gutter="10" class="mb8">
-                    <el-col :span="1.5">
-                        <el-button
-                            type="primary"
-                            icon="el-icon-plus"
-                            size="mini"
-                            @click="handleAdd({ category: 'builtin' })"
-                            v-hasPermi="['system:user:add']"
-                        >设备运维数据</el-button>
-                    </el-col>
-                </el-row>
-
-                <x-table
-                    :options="builtinOptions"
-                    :data="builtins"
-                    :loading="loading"
-                    :hasReset="true"
-                    :isSelectable="false"
-                    :isPaging="false"
-                    :pagination="pagination"
-                    @page-change="search"
-                    @selection-change="select"
-                >
-                    <el-table-column
-                        label="操作"
-                        align="center"
-                        width="180"
-                        class-name="small-padding fixed-width"
-                    >
-                        <template slot-scope="scope">
+                                icon="el-icon-edit"
+                                @click="handleUpdate(scope.row)"
+                                v-hasPermi="['configuration:product:collect']"
+                            >修改</el-button>
                             <el-button
                                 size="mini"
                                 type="text"
                                 icon="el-icon-delete"
-                                @click="handleDelete({ category: 'builtin', data: scope.row })"
-                                v-hasPermi="['configuration:region:remove']"
+                                @click="handleDelete(scope.row)"
+                                v-hasPermi="['configuration:product:collect']"
                             >删除</el-button>
                         </template>
                     </el-table-column>
@@ -110,81 +63,160 @@
         </el-row>
 
         <!-- 添加或修改参数配置对话框 -->
-        <x-dialog
+        <el-dialog
             :title="title"
-            :form="sensorDialogForm"
-            :options="sensorDialogOptions"
-            :rules="sensorDialogRules"
-            :visible.sync="isSensorDialogVisible"
+            :visible.sync="isDialogVisible"
             :show-close="false"
-            @callback="submitForm"
+            :close-on-click-modal="false"
+            :destory-on-close="true"
             append-to-body
-            @change="handleDialogChange"
         >
-            <template slot="range">
-                <el-row :gutter="10" style="margin-bottom: 20px;">
-                    <el-col
-                        :span="5"
-                        :offset="2"
-                    >数据类型: {{ cache.sensors[sensorDialogForm['sensorId']]?cache.sensors[sensorDialogForm['sensorId']].dataType:'' }}</el-col>
-                    <el-col
-                        :span="5"
-                    >范围: {{ `${cache.sensors[sensorDialogForm['sensorId']]?cache.sensors[sensorDialogForm['sensorId']].minValue:''} - ${cache.sensors[sensorDialogForm['sensorId']]?cache.sensors[sensorDialogForm['sensorId']].maxValue:''}` }}</el-col>
-                    <el-col
-                        :span="5"
-                    >偏差值: {{ cache.sensors[sensorDialogForm['sensorId']]?cache.sensors[sensorDialogForm['sensorId']].deviationValue:'' }}</el-col>
-                    <el-col
-                        :span="5"
-                    >单位: {{ cache.sensors[sensorDialogForm['sensorId']]?cache.sensors[sensorDialogForm['sensorId']].unit:'' }}</el-col>
+            <el-row :gutter="10" style="margin-bottom: 20px;">
+                <el-col :span="24">
+                    <el-radio-group
+                        v-model="dialogForm['sourceType']"
+                        @change="swap"
+                        :disabled="!!dialogForm['productFieldId']"
+                    >
+                        <el-radio label="0">设备自定义上传数据</el-radio>
+                        <el-radio label="1">传感器上传数据</el-radio>
+                    </el-radio-group>
+                </el-col>
+            </el-row>
+            <el-form
+                ref="frm"
+                :model="dialogForm"
+                label-position="right"
+                :rules="dialogRules"
+                label-width="140px"
+            >
+                <el-row>
+                    <el-form-item
+                        label="传感器类型"
+                        prop="sensorType"
+                        size="mini"
+                        v-if="dialogForm['sourceType'] == '1'"
+                    >
+                        <el-select
+                            v-model="dialogForm['sensorType']"
+                            filterable
+                            clearable
+                            @change="change({ category: 'sensorType', value: dialogForm['sensorType'], data: sensorTypeOptions.find(x=>x.value===dialogForm['sensorType']) })"
+                        >
+                            <el-option
+                                v-for="item in sensorTypeOptions"
+                                :key="item.key || item.value"
+                                :label="item.label"
+                                :value="item.value"
+                                :disabled="item.disabled || undefined"
+                            ></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item
+                        label="传感器名称"
+                        prop="sensorId"
+                        size="mini"
+                        v-if="dialogForm['sourceType'] == '1'"
+                    >
+                        <el-select
+                            v-model="dialogForm['sensorId']"
+                            filterable
+                            clearable
+                            @change="change({ category: 'sensorId', value: dialogForm['sensorId'], data: sensorOptions.find(x=>x.value===dialogForm['sensorId']) })"
+                        >
+                            <el-option
+                                v-for="item in sensorOptions"
+                                :key="item.key || item.value"
+                                :label="item.label"
+                                :value="item.value"
+                                :disabled="item.disabled || undefined"
+                            ></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="数据名称" prop="productFieldNameCn" size="mini">
+                        <el-input
+                            type="text"
+                            v-model="dialogForm['productFieldNameCn']"
+                            :disabled=" dialogForm['sourceType'] == '1'"
+                        />
+                    </el-form-item>
+                    <el-form-item label="数据标识" prop="productFieldName" size="mini">
+                        <el-input
+                            type="text"
+                            v-model="dialogForm['productFieldName']"
+                            :disabled=" dialogForm['sourceType'] == '1'"
+                        />
+                    </el-form-item>
+                    <el-form-item label="数据类型" prop="productDataType" size="mini">
+                        <el-select
+                            v-model="dialogForm['productDataType']"
+                            filterable
+                            clearable
+                            :disabled=" dialogForm['sourceType'] == '1'"
+                            @change="change({ category: 'productDataType', value: dialogForm['productDataType'], data: dataTypeOptions.find(x=>x.value===dialogForm['productDataType']) })"
+                        >
+                            <el-option
+                                v-for="item in dataTypeOptions"
+                                :key="item.key || item.value"
+                                :label="item.label"
+                                :value="item.value"
+                                :disabled="item.disabled || undefined"
+                            ></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="协议标识" prop="protocolFieldName" size="mini">
+                        <el-input type="text" v-model="dialogForm['protocolFieldName']" />
+                    </el-form-item>
+                    <!-- <el-col :span="24" v-if="dialogForm['sourceType'] == '1'">
+                        <el-row :gutter="10" style="margin-bottom: 20px;">
+                            <el-col
+                                :span="5"
+                                :offset="2"
+                            >数据类型: {{ cache.sensors[dialogForm['sensorId']]?cache.sensors[dialogForm['sensorId']].dataType:'' }}</el-col>
+                            <el-col
+                                :span="5"
+                            >范围: {{ `${cache.sensors[dialogForm['sensorId']]?cache.sensors[dialogForm['sensorId']].minValue:''} - ${cache.sensors[dialogForm['sensorId']]?cache.sensors[dialogForm['sensorId']].maxValue:''}` }}</el-col>
+                            <el-col
+                                :span="5"
+                            >偏差值: {{ cache.sensors[dialogForm['sensorId']]?cache.sensors[dialogForm['sensorId']].deviationValue:'' }}</el-col>
+                            <el-col
+                                :span="5"
+                            >单位: {{ cache.sensors[dialogForm['sensorId']]?cache.sensors[dialogForm['sensorId']].unit:'' }}</el-col>
+                        </el-row>
+                    </el-col>-->
+                    <el-form-item label="范围" prop="range" size="small">
+                        <el-input
+                            v-model="dialogForm['minValue']"
+                            controls-position="right"
+                            :controls="false"
+                            clearable
+                            style="width: 220px;"
+                        ></el-input>
+                        <span>-</span>
+                        <el-input
+                            v-model="dialogForm['maxValue']"
+                            controls-position="right"
+                            :controls="false"
+                            clearable
+                            style="width: 220px;"
+                        ></el-input>
+                    </el-form-item>
+                    <el-form-item label="偏差值" prop="deviationValue" size="mini">
+                        <el-input-number v-model="dialogForm['deviationValue']" :controls="false"></el-input-number>
+                    </el-form-item>
+                    <el-form-item label="单位" prop="unit" size="mini">
+                        <el-input type="text" v-model="dialogForm['unit']" />
+                    </el-form-item>
+                    <el-form-item label="排序" prop="sort" size="mini">
+                        <el-input-number v-model="dialogForm['sort']" :controls="false"></el-input-number>
+                    </el-form-item>
                 </el-row>
-
-                <el-form-item label="应用范围" prop="range" size="small">
-                    <el-input-number
-                        v-model="sensorDialogForm['minValue']"
-                        controls-position="right"
-                        :controls="false"
-                        clearable
-                        style="width: 220px;"
-                    ></el-input-number>
-                    <span>-</span>
-                    <el-input-number
-                        v-model="sensorDialogForm['maxValue']"
-                        controls-position="right"
-                        :controls="false"
-                        clearable
-                        style="width: 220px;"
-                    ></el-input-number>
-                </el-form-item>
-            </template>
-        </x-dialog>
-        <x-dialog
-            :title="title"
-            :form="builtinDialogForm"
-            :options="builtinDialogOptions"
-            :rules="builtinDialogRules"
-            :visible.sync="isBuiltinDialogVisible"
-            :show-close="false"
-            @callback="submitForm"
-            append-to-body
-        >
-            <el-form-item slot="measure" label="测量范围" prop="measure" size="small">
-                <el-input-number
-                    v-model="builtinDialogForm['minValue']"
-                    controls-position="right"
-                    :controls="false"
-                    clearable
-                    style="width: 220px;"
-                ></el-input-number>
-                <span>-</span>
-                <el-input-number
-                    v-model="builtinDialogForm['maxValue']"
-                    controls-position="right"
-                    :controls="false"
-                    clearable
-                    style="width: 220px;"
-                ></el-input-number>
-            </el-form-item>
-        </x-dialog>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="submit" size="small">确 定</el-button>
+                <el-button @click="cancel" size="small">取 消</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -247,18 +279,15 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
             // 岗位选项
             postOptions: [],
             // 角色选项
             roleOptions: [],
+            sensorOptions: [],
             /** 传感器类型选项 */
             sensorTypeOptions: [],
             /** 数据类型选项 */
@@ -285,41 +314,63 @@ export default {
             /** form $ */
             /** table ^ */
             pagination: new Paginator(),
-            sensorOptions: SensorTableOptions,
+            options: SensorTableOptions,
             builtinOptions: BuiltinTableOptions,
-            sensors: [],
+            models: [],
             builtins: [],
             /** table $ */
             /** dialog ^ */
-            sensorDialogForm: {
+            dialogForm: {
                 unit: "",
                 minValue: null,
                 maxValue: null,
+                fieldName: null,
+                fieldNameCn: null,
                 deviationValue: null,
                 productId: this.firmware.productId,
-                sensorId: null
+                sensorId: null,
+                category: null
             },
             builtinDialogForm: {},
             sensorDialogOptions: SensorDialogOptions,
             builtinDialogOptions: BuiltinDialogOptions,
-            sensorDialogRules: {
-                sensorType: [
+            dialogRules: {
+                productFieldName: [
                     {
                         required: true,
-                        message: "必选",
-                        trigger: "click,blur,change"
+                        message: "必填",
+                        trigger: "blur"
+                    },
+                    {
+                        validator: (rule, value, callback, source, options) => {
+                            const field = rule.field;
+                            if (!field) return callback();
+                            if (
+                                value == "" ||
+                                value == undefined ||
+                                value == null
+                            ) {
+                                callback();
+                            } else {
+                                const count = this.models.filter(
+                                    x =>
+                                        x[field] === value &&
+                                        (!this.dialogForm.productFieldId ||
+                                            this.dialogForm.productFieldId !=
+                                                x.productFieldId)
+                                ).length;
+                                console.log("#", field, count);
+                                callback(
+                                    count
+                                        ? new Error("该数据标识已被添加")
+                                        : undefined
+                                );
+                            }
+                        },
+                        trigger: "blur"
                     }
                 ],
-                sensorId: [
-                    {
-                        required: true,
-                        message: "必选",
-                        trigger: "click,blur,change"
-                    }
-                ]
-            },
-            builtinDialogRules: {
-                productFieldName: [
+                productFieldNameCn: [
                     {
                         required: true,
                         message: "必填",
@@ -332,10 +383,88 @@ export default {
                         message: "必选",
                         trigger: "change"
                     }
+                ],
+                protocolFieldName: [
+                    {
+                        required: true,
+                        message: "必填",
+                        trigger: "blur"
+                    },
+                    {
+                        validator: (rule, value, callback, source, options) => {
+                            const field = rule.field;
+                            if (!field) return callback();
+                            if (
+                                value == "" ||
+                                value == undefined ||
+                                value == null
+                            ) {
+                                callback();
+                            } else {
+                                const count = this.models.filter(
+                                    x =>
+                                        x[field] === value &&
+                                        (!this.dialogForm.productFieldId ||
+                                            this.dialogForm.productFieldId !=
+                                                x.productFieldId)
+                                ).length;
+                                console.log("#", field, count);
+                                callback(
+                                    count
+                                        ? new Error("该协议标识已被添加")
+                                        : undefined
+                                );
+                            }
+                        },
+                        trigger: "blur"
+                    }
+                ],
+                sensorType: [
+                    {
+                        required: true,
+                        message: "必选",
+                        trigger: "click,blur,change"
+                    }
+                ],
+                sensorId: [
+                    {
+                        required: true,
+                        message: "必选",
+                        trigger: "click,blur,change"
+                    },
+                    {
+                        validator: (rule, value, callback, source, options) => {
+                            const field = rule.field;
+                            if (!field) return callback();
+                            console.log("validator", field, rule, value);
+                            console.log(">>>", source, options);
+                            if (
+                                value == "" ||
+                                value == undefined ||
+                                value == null
+                            ) {
+                                callback();
+                            } else {
+                                const count = this.models.filter(
+                                    x =>
+                                        x[field] === value &&
+                                        (!this.dialogForm.productFieldId ||
+                                            this.dialogForm.productFieldId !=
+                                                x.productFieldId)
+                                ).length;
+                                console.log("#", field, count);
+                                callback(
+                                    count
+                                        ? new Error("该传感器已被添加")
+                                        : undefined
+                                );
+                            }
+                        },
+                        trigger: "change"
+                    }
                 ]
             },
-            isSensorDialogVisible: false,
-            isBuiltinDialogVisible: false,
+            isDialogVisible: false,
             /** dialog $ */
             // 表单校验
             rules: {
@@ -393,17 +522,12 @@ export default {
         // 根据名称筛选部门树
         deptName(val) {
             this.$refs.tree.filter(val);
+        },
+        firmware(val) {
+            this.search();
         }
     },
     created() {
-        console
-            .log
-            // this.formOptions
-            //     .map(x => {
-            //         return `${x.prop}: ''`;
-            //     })
-            //     .join(",")
-            ();
         this.getTreeData();
         this.getDicts("sys_normal_disable").then(({ data }) => {
             this.statusOptions.push(
@@ -422,25 +546,15 @@ export default {
             // }));
             // this.$forceUpdate();
         });
-        // this.getDicts("sys_user_sex").then(response => {
-        //     this.sexOptions = response.data;
-        //     let node = this.dialogOptions.find(x => x.prop === "sex");
-        //     if (node) {
-        //         node.options = this.sexOptions.map(x => ({
-        //             label: x.dictLabel,
-        //             value: x.dictValue
-        //         }));
-        //     }
-        // });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
-        });
         this.$sensortype.get().then(({ rows }) => {
+            this.cache.sensorTypes = rows.reduce(
+                (p, c) => ((p[c.sensorTypeId] = c.sensorTypeName), p),
+                {}
+            );
             this.sensorTypeOptions = rows.map(x => ({
                 label: x.sensorTypeName,
                 value: x.sensorTypeId
             }));
-            console.log(this.sensorTypeOptions);
 
             let node = this.sensorDialogOptions.find(
                 x => x.prop === "sensorType"
@@ -460,7 +574,16 @@ export default {
             let node = this.builtinDialogOptions.find(
                 x => x.prop === "productDataType"
             );
-            if (node) node.options = this.dataTypeOptions;
+            if (node) {
+                node.options = this.dataTypeOptions;
+                node.formatter = (row, column, index) => {
+                    try {
+                        return this.cache.dataTypes[row["productDataType"]];
+                    } catch (error) {
+                        return row["productDataType"];
+                    }
+                };
+            }
         });
 
         this.search();
@@ -468,7 +591,6 @@ export default {
     methods: {
         /** 查询用户列表 */
         search() {
-            console.log("trigger search", this.formData);
             let start = this.formData.dateRange
                 ? moment(this.formData.dateRange[0]).format("YYYY-MM-DD")
                 : undefined;
@@ -485,21 +607,12 @@ export default {
             delete params.dateRange;
             this.loading = true;
             this.$product
-                .getSensors({ productId: this.firmware.productId })
-                .then(({ data, total }) => {
-                    this.loading = false;
-                    this.sensors = data;
-                    this.pagination.all = total;
-                });
-            this.$product
-                .getBuiltins({
-                    productId: this.firmware.productId,
-                    type: "1"
+                .getFieldsUploadByProductId({
+                    productId: this.firmware.productId
                 })
                 .then(({ data, total }) => {
-                    console.log("type 1 ", data);
                     this.loading = false;
-                    this.builtins = data;
+                    this.models = data;
                     this.pagination.all = total;
                 });
         },
@@ -561,7 +674,7 @@ export default {
         },
         // 取消按钮
         cancel() {
-            this.open = false;
+            this.isDialogVisible = false;
             this.reset();
         },
         // 表单重置
@@ -580,11 +693,12 @@ export default {
             //     postIds: [],
             //     roleIds: []
             // };
-            this.sensorDialogForm = {
+            this.dialogForm = {
+                sourceType: "0",
                 minValue: null,
                 maxValue: null,
                 deviationValue: null,
-                unit: null
+                unit: ""
             };
             // this.resetForm("form");
         },
@@ -608,82 +722,69 @@ export default {
         /** 设备参数按钮操作 */
         seek({ category, data }) {
             if (category === "parabuiltins") {
-                console.log();
                 this.isParabuiltinVisible = true;
                 this.current.node = data;
             }
         },
         /** 新增按钮操作 */
         handleAdd({ category }) {
-            if (category === "sensor") {
-                // this.reset();
-                // this.getTreeData();
-                // this.getPositions();
-                // this.getRoles();
-                this.sensorDialogForm = {
-                    productId: this.firmware.productId,
-                    unit: ""
-                };
-                this.isSensorDialogVisible = true;
-                this.title = "添加传感器";
-            }
-            if (category === "builtin") {
-                // this.reset();
-                // this.getTreeData();
-                // this.getPositions();
-                // this.getRoles();
-                this.builtinDialogForm = {
-                    productId: this.firmware.productId,
-                    unit: ""
-                };
-                this.isBuiltinDialogVisible = true;
-                this.title = "添加固件属性";
-            }
+            this.dialogForm = {
+                sourceType: "0",
+                productId: this.firmware.productId,
+                unit: ""
+            };
+            this.sensorOptions = [];
+            this.isDialogVisible = true;
+            this.title = "添加上传数据";
+            this.$refs.frm && this.$refs.frm.clearValidate();
         },
         /** 修改按钮操作 */
-        handleUpdate(row) {
-            this.reset();
-            this.getTreeData();
-            this.getPositions();
-            this.getRoles();
-            const userId = row.userId || this.ids;
-            getUser(userId).then(response => {
-                this.form = response.data;
-                this.form.postIds = response.postIds;
-                this.form.roleIds = response.roleIds;
-                this.dialogVisible = true;
-                this.title = "修改";
-                this.form.password = "";
+        async handleUpdate(node) {
+            let { data } = await this.$product.getFieldsUpload({
+                productFieldId: node.productFieldId
+            });
+            this.dialogForm = Object.assign({}, data, {
+                sensorType: Number(data.sensorType)
+            });
+            this.sensorOptions = [];
+            this.isDialogVisible = true;
+            this.title = "修改上传数据";
+            this.change({
+                category: "sensorType",
+                value: data.sensorType
+            });
+            this.$refs.frm && this.$refs.frm.clearValidate();
+        },
+        submit() {
+            this.$refs["frm"].validate(valid => {
+                if (valid) {
+                    this.$refs["frm"].clearValidate();
+                    this.submitForm();
+                }
             });
         },
         /** 提交按钮 */
         submitForm() {
-            console.log("submit", this.sensorDialogForm);
-            if (this.isSensorDialogVisible) {
-                let sensor = this.cache.sensors[this.sensorDialogForm['sensorId']];
-                const params = Object.assign({}, this.sensorDialogForm, {
-                    dataName: sensor.dataName,
-                    dataType: sensor.dataType
-                });
-                this.$product
-                    .addSensor(params)
-                    .then(response => {
-                        if (response.code === 200) {
-                            this.msgSuccess("添加传感器成功");
-                            this.isSensorDialogVisible = false;
-                            this.search();
-                        } else {
-                            this.msgError(response.msg);
-                        }
-                    });
-            } else if (this.isBuiltinDialogVisible) {
-                const params = Object.assign({}, this.builtinDialogForm, {
-                    type: 1
-                });
-                this.$product.addBuiltin(params).then(response => {
+            let sensor = this.cache.sensors[this.dialogForm["sensorId"]];
+            const params = Object.assign({}, this.dialogForm, {
+                productId: this.firmware.productId,
+                type: 1
+            });
+            if (this.dialogForm.productFieldId == null) {
+                this.$product.addFieldsUpload(params).then(response => {
                     if (response.code === 200) {
-                        this.msgSuccess("添加运维数据成功");
-                        this.isBuiltinDialogVisible = false;
+                        this.msgSuccess("添加成功");
+                        this.isDialogVisible = false;
+                        this.search();
+                    } else {
+                        this.msgError(response.msg);
+                    }
+                });
+            } else {
+                this.$product.updateFieldsUpload(params).then(response => {
+                    if (response.code === 200) {
+                        this.msgSuccess("修改成功");
+                        this.isDialogVisible = false;
                         this.search();
                     } else {
                         this.msgError(response.msg);
@@ -692,24 +793,17 @@ export default {
             }
         },
         /** 删除按钮操作 */
-        handleDelete({ category, data }) {
+        handleDelete(node) {
             this.$confirm("是否确认删除数据项?", "警告", {
                 confirmButtonText: "确定",
                 cancelButtonText: "取消",
                 type: "warning"
             })
                 .then(() => {
-                    if (category === "sensor") {
-                        return this.$product.removeSensor({
-                            // productId: this.firmware.productId,
-                            ids: [ data.productSensorId ]
-                        });
-                    } else if (category === "builtin") {
-                        return this.$product.removeBuiltin({
-                            type: 1,
-                            ids: [data.productFieldId]
-                        });
-                    }
+                    return this.$product.removeFieldsUpload({
+                        // productId: this.firmware.productId,
+                        ids: [node.productFieldId]
+                    });
                 })
                 .then(() => {
                     this.search();
@@ -748,40 +842,52 @@ export default {
             };
             a.click();
         },
-        handleDialogChange({ category, value }) {
+        change({ category, value }) {
             if (category === "sensorType") {
                 this.$sensor
                     .getSensorsByTypeId({ sensorTypeId: value })
                     .then(({ data }) => {
-                        console.log("sensors", data);
                         this.cache.sensors = data.reduce(
                             (p, c) => ((p[c.sensorId] = c), p),
                             {}
                         );
-                        let sensors = data.map(x => ({
+                        let options = data.map(x => ({
                             label: x.sensorName,
                             value: x.sensorId
                         }));
+                        this.sensorOptions = options;
                         let node = this.sensorDialogOptions.find(
                             x => x.prop === "sensorId"
                         );
                         if (node) {
-                            node.options = sensors;
+                            node.options = options;
                         }
                     });
             }
             if (category === "sensorId") {
                 const sensor = this.cache.sensors[value];
                 if (!sensor) return;
-                this.sensorDialogForm.minValue = sensor.minValue;
-                this.sensorDialogForm.maxValue = sensor.maxValue;
-                this.sensorDialogForm.unit = sensor.unit;
-                this.sensorDialogForm.deviationValue = sensor.deviationValue;
+                this.dialogForm.minValue = sensor.minValue;
+                this.dialogForm.maxValue = sensor.maxValue;
+                this.dialogForm.productDataType = sensor.dataType;
+                this.dialogForm.productFieldName = sensor.fieldName;
+                this.dialogForm.productFieldNameCn = sensor.fieldNameCn;
+                this.dialogForm.unit = sensor.unit || "";
+                this.dialogForm.deviationValue = sensor.deviationValue;
             }
         },
         select(v) {
-            console.log("select", v);
             this.handleSelectionChange(v);
+        },
+        swap() {
+            // if(this.dialogForm['sourceType']){}
+
+            this.dialogForm = {
+                productId: this.firmware.productId,
+                sourceType: this.dialogForm["sourceType"],
+                unit: ""
+            };
+            this.$refs.frm && this.$refs.frm.clearValidate();
         }
     }
 };

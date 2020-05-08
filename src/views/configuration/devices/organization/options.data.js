@@ -75,8 +75,8 @@ export const FormOptions = [
         options: []
     },
     {
-        prop: "deviceId",
-        label: "设备ID",
+        prop: "deviceCode",
+        label: "设备编号",
         type: "text",
         clearable: true
     }

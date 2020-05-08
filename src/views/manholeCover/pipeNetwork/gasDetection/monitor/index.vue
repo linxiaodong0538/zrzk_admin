@@ -37,14 +37,13 @@
       <div class="xny-cover">
         <div class="xny-Manhole">
           <span class="coverList">所属项目:</span>
-          <el-select v-model="value" placeholder>
+          <el-select v-model="value" placeholder  class="Manhole">
             <el-option
               v-for="item in options"
               :key="item.value"
               :label="item.label"
               :value="item.value"
               size="small"
-              class="Manhole"
             ></el-option>
           </el-select>
           <span class="coverList">设备编号:</span>
@@ -161,25 +160,7 @@ export default {
       total: 10,
       // 井盖管理数据
       typeList: [
-        {
-          lanternsName: "灯具", //灯具名称
-          controllerAddress: "1", //灯控制器地址
-          onlineState: "离线", //在线状态
-          deviceState: "关", //设备状态
-          alarmView: "-", //报警查看
-          processing: "-", //一键处理
-          voltage: "-", //电压
-          current: "-", //电流
-          activePower: "-", //有功功率
-          reactivePower: "-", //有功功率
-          powerFactor: "-", //功率因数
-          temperature: "-", //温度
-          signalIntensity: "-", //信号强度
-          NB_IMSI: "-", //NB_IMSI
-          apparentPower: "-", //视在电能
-          runningTime: "-", //运行时间
-          reportingTime: "-" //上报时间
-        }
+       
       ],
       // 弹出层标题
       title: "",

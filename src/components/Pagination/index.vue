@@ -11,6 +11,7 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     />
+    
   </div>
 </template>
 

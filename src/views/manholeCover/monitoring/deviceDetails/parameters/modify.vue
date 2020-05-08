@@ -170,6 +170,10 @@ export default {
     margin-left: 10px;
   }
 }
+
+.ipAddress{
+  width: 400px;
+}
 .mechanismTime,
 .mechanismTime2 {
   position: absolute;
@@ -296,7 +300,5 @@ export default {
 .el-select > .el-input {
   width: 200px;
 }
-.ipAddress.el-select > .el-input {
-  width: 400px;
-}
+
 </style>

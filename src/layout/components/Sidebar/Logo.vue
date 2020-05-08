@@ -26,7 +26,7 @@ export default {
   },
   data() {
     return {
-      title: '智能井盖管理系统',
+      title: '智能井盖管理平台',
       logo: logoImg
     }
   }
@@ -57,8 +57,8 @@ export default {
     width: 100%;
 
     & .sidebar-logo {
-      width: 32px;
-      height: 32px;
+      width: 45px;
+      height: 45px;
       vertical-align: middle;
       margin-right: 12px;
     }

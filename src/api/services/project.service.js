@@ -8,5 +8,6 @@ export class ProjectService extends SuperService {
     constructor() {
         super({ url: '/device/bcProject' });
     }
+
+
 }
-  

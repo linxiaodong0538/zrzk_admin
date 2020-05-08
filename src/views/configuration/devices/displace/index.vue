@@ -26,25 +26,28 @@
                             type="primary"
                             icon="el-icon-plus"
                             size="mini"
+                            plain
                             @click="handleAdd"
                             v-hasPermi="['system:user:add']"
                         >新增</el-button>
                     </el-col>
                     <!-- <el-col :span="1.5">
                         <el-button
-                            type="success"
+                            type="primary" 
                             icon="el-icon-edit"
                             size="mini"
+                            plain
                             :disabled="single"
                             @click="handleUpdate"
                             v-hasPermi="['system:user:edit']"
                         >修改</el-button>
                     </el-col>
                     <el-col :span="1.5">
-                        <el-button
-                            type="danger"
+                        <el-button 
+                            type="primary"
                             icon="el-icon-delete"
                             size="mini"
+                            plain
                             :disabled="multiple"
                             @click="handleDelete"
                             v-hasPermi="['system:user:remove']"
@@ -52,18 +55,20 @@
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="info"
+                            type="primary"
                             icon="el-icon-upload2"
                             size="mini"
+                            plain
                             @click="handleImport"
                             v-hasPermi="['system:user:import']"
                         >导入</el-button>
                     </el-col>
                     <el-col :span="1.5">
                         <el-button
-                            type="warning"
+                            type="primary"
                             icon="el-icon-download"
                             size="mini"
+                            plain
                             @click="handleExport"
                             v-hasPermi="['system:user:export']"
                         >导出</el-button>
@@ -103,7 +108,7 @@
                                 v-hasPermi="['configuration:region:remove']"
                             >删除</el-button>
                         </template>
-                    </el-table-column> -->
+                    </el-table-column>-->
                 </x-table>
             </el-col>
         </el-row>
@@ -117,7 +122,7 @@
             :visible.sync="dialogVisible"
             @callback="submitForm"
         >
-            <el-form-item slot="measure" label="测量范围" prop="measure" size="small" >
+            <el-form-item slot="measure" label="测量范围" prop="measure" size="small">
                 <el-input-number
                     v-model="formData['minValue']"
                     controls-position="right"
@@ -125,7 +130,7 @@
                     clearable
                     style="width: 220px;"
                 ></el-input-number>
-                <span> - </span>
+                <span>-</span>
                 <el-input-number
                     v-model="formData['maxValue']"
                     controls-position="right"
@@ -185,14 +190,10 @@ export default {
             open: false,
             // 部门名称
             deptName: undefined,
-            // 默认密码
-            initPassword: undefined,
             // 日期范围
             dateRange: [],
             // 状态数据字典
             statusOptions: [],
-            // 性别状态字典
-            sexOptions: [],
             // 岗位选项
             postOptions: [],
             // 角色选项
@@ -318,19 +319,6 @@ export default {
             // }));
             // this.$forceUpdate();
         });
-        this.getDicts("sys_user_sex").then(response => {
-            this.sexOptions = response.data;
-            let node = this.dialogOptions.find(x => x.prop === "sex");
-            if (node) {
-                node.options = this.sexOptions.map(x => ({
-                    label: x.dictLabel,
-                    value: x.dictValue
-                }));
-            }
-        });
-        this.getConfigKey("sys.user.initPassword").then(response => {
-            this.initPassword = response.data;
-        });
     },
     methods: {
         /** 查询用户列表 */
@@ -352,11 +340,18 @@ export default {
             });
             delete params.dateRange;
             this.loading = true;
-            listUser(params).then(({ rows, total }) => {
-                this.loading = false;
-                this.models = rows;
-                this.pagination.all = total;
-            });
+            listUser(params).then(
+                ({ rows, total }) => {
+                    this.loading = false;
+                    this.models = rows;
+                    this.pagination.all = total;
+                },
+                err => {
+                    this.loading = false;
+                    this.models = [];
+                    this.pagination.all = 0;
+                }
+            );
         },
         /** 查询部门下拉树结构 */
         getTreeData() {
@@ -376,7 +371,7 @@ export default {
             return data.label.indexOf(value) !== -1;
         },
         // 节点单击事件
-        handleNodeClick(data) {
+        handleNodeClick({ data }) {
             this.current.deptId = data.id;
             this.search();
         },
@@ -470,7 +465,6 @@ export default {
             if (t == "open") this.open = true;
             else this.dialogVisible = true;
             this.title = "新增传感器";
-            this.form.password = this.initPassword;
         },
         /** 修改按钮操作 */
         handleUpdate(row) {
