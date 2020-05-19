@@ -25,7 +25,7 @@
       <el-row>
         <el-col :lg="2" :md="2">
           <!-- action="https://jsonplaceholder.typicode.com/posts/" -->
-          <el-upload
+          <!-- <el-upload
             :show-file-list="false"
             :before-upload="beforeUpload"
             action="https://jsonplaceholder.typicode.com/posts/"
@@ -35,7 +35,7 @@
               上传
               <i class="el-icon-upload el-icon--right"></i>
             </el-button>
-          </el-upload>
+          </el-upload> -->
         </el-col>
         <el-col :lg="{span: 1, offset: 2}" :md="2">
           <el-button icon="el-icon-plus" size="small" @click="changeScale(1)"></el-button>

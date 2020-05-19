@@ -387,6 +387,8 @@ export default {
     this.getList();
     this.getTreeselect();
     this.getDicts("sys_normal_disable").then(response => {
+      console.log(response.data);
+      
       this.statusOptions = response.data;
     });
     this.getDicts("sys_user_sex").then(response => {

@@ -102,6 +102,13 @@ export const FormOptions = [
         options: [{ label: '正常', value: '1' }]
     },
     {
+        prop: "isInstallParts",
+        label: "安装状态",
+        type: "select",
+        clearable: true,
+        options: [{ label: '已安装', value: '0' },{ label: '未安装', value: '1' }]
+    },
+    {
         prop: "dateRange",
         label: "登记时间",
         type: "daterange",

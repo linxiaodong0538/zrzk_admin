@@ -26,11 +26,6 @@ router.beforeEach((to, from, next) => {
                     store.dispatch('app/GetOrganizations').then(res=>{});
                     // store.dispatch('app/GetProductTypes').then(res=>{});
                     store.dispatch('GenerateRoutes', { roles }).then(accessRoutes => {
-                 
-                        
-                        // console.log(accessRoutes,1111111);
-                        // console.log(router,222);
-                        
                         // 测试 默认静态页面
                         // store.dispatch('permission/generateRoutes', { roles }).then(accessRoutes => {
                         // 根据roles权限生成可访问的路由表
